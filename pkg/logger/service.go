@@ -24,7 +24,20 @@ func (s *Service) NewLoggerEntry(named string) (*zap.Logger, error) {
 	l := zap.New(zapcore.NewTee(cores...))
 	zap.ReplaceGlobals(l)
 
-	l = l.Named(named)
+	l = l.Named(named).With(zap.String(HostnameFieldTag, s.cfg.GetHostName()),
+		zap.String(EnvironmentNameTag, s.cfg.GetEnvironmentName()),
+		zap.String(StageNameTag, s.cfg.GetStageName()),
+		zap.Int(ApplicationPID, s.cfg.GetApplicationPID()),
+		zap.String(VersionTag, s.cfg.GetVersion()),
+		zap.String(SVCReleaseTag, s.cfg.GetReleaseTag()),
+		zap.String(SVCCommitShortID, s.cfg.GetShortCommitID()),
+		zap.String(SVCCommitID, s.cfg.GetCommitID()),
+		zap.Uint64(BuildNumberTag, s.cfg.GetBuildNumber()),
+		zap.Time(BuildDateTag, s.cfg.GetBuildDate()),
+		zap.Uint64(BuildDateTimestampTag, s.cfg.GetBuildDateTS()),
+		zap.String(SVCCommitID, s.cfg.GetCommitID()),
+		zap.String(SVCCommitID, s.cfg.GetCommitID()),
+	)
 
 	_, ok := s.entries[named]
 	if ok {
