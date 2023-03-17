@@ -38,3 +38,11 @@ type Config struct {
 	// allowed: debug, info, warn, error, dpanic, panic, fatal
 	SentryMinimalLogsLevel string `envconfig:"SENTRY_LOGGER_LEVEL" default:"warn"`
 }
+
+func (c *Config) GetMinimalLogLevel() string {
+	return c.MinimalLogsLevel
+}
+
+func (c *Config) IsStacktraceEnabled() bool {
+	return c.StackTraceEnable
+}
