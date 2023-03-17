@@ -35,8 +35,6 @@ func (s *Service) NewLoggerEntry(named string) (*zap.Logger, error) {
 		zap.Uint64(BuildNumberTag, s.cfg.GetBuildNumber()),
 		zap.Time(BuildDateTag, s.cfg.GetBuildDate()),
 		zap.Uint64(BuildDateTimestampTag, s.cfg.GetBuildDateTS()),
-		zap.String(SVCCommitID, s.cfg.GetCommitID()),
-		zap.String(SVCCommitID, s.cfg.GetCommitID()),
 	)
 
 	_, ok := s.entries[named]
@@ -79,7 +77,7 @@ func NewService(cfg configManager) (*Service, error) {
 
 	lCfg := zap.NewProductionConfig()
 	lCfg.Level = zap.NewAtomicLevelAt(*logsLevel)
-	lCfg.DisableStacktrace = true // We use errs.ZapStack to get stacktrace
+	lCfg.DisableStacktrace = !cfg.IsStacktraceEnabled() // We use errs.ZapStack to get stacktrace
 	lCfg.OutputPaths = []string{"stdout"}
 	if cfg.IsDebug() {
 		lCfg.Level.SetLevel(zap.DebugLevel)

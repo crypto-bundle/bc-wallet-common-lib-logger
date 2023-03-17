@@ -11,8 +11,10 @@ type configManager interface {
 	IsDev() bool
 	IsDebug() bool
 	IsLocal() bool
-	GetMinimalLogLevel() string
 	GetStageName() string
+
+	GetMinimalLogLevel() string
+	IsStacktraceEnabled() bool
 	GetApplicationPID() int
 	GetVersion() string
 	GetReleaseTag() string
