@@ -34,7 +34,7 @@ func (s *Service) NewLoggerEntry(named string) (*zap.Logger, error) {
 		zap.String(SVCCommitID, s.cfg.GetCommitID()),
 		zap.Uint64(BuildNumberTag, s.cfg.GetBuildNumber()),
 		zap.Time(BuildDateTag, s.cfg.GetBuildDate()),
-		zap.Uint64(BuildDateTimestampTag, s.cfg.GetBuildDateTS()),
+		zap.Uint64(BuildDateTimestampTag, uint64(s.cfg.GetBuildDateTS())),
 	)
 
 	_, ok := s.entries[named]
