@@ -1,8 +1,6 @@
 package logger
 
 import (
-	"log"
-
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -12,11 +10,9 @@ type Service struct {
 
 	defaultLogger *zap.Logger
 	cores         []zapcore.Core
-
-	entries map[string]*zap.Logger
 }
 
-func (s *Service) NewLoggerEntry(named string) (*zap.Logger, error) {
+func (s *Service) NewLoggerEntry(named string) *zap.Logger {
 	var cores = []zapcore.Core{
 		s.defaultLogger.Core(),
 	}
@@ -37,16 +33,10 @@ func (s *Service) NewLoggerEntry(named string) (*zap.Logger, error) {
 		zap.Uint64(BuildDateTimestampTag, uint64(s.cfg.GetBuildDateTS())),
 	)
 
-	_, ok := s.entries[named]
-	if ok {
-		return nil, ErrNamedLoggerAlreadyRegistered
-	}
-	s.entries[named] = l
-
-	return l, nil
+	return l
 }
 
-func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) (*zap.Logger, error) {
+func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger {
 	var cores = []zapcore.Core{
 		s.defaultLogger.Core(),
 	}
@@ -56,13 +46,7 @@ func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) (*
 
 	l = l.Named(named).With(fields...)
 
-	_, ok := s.entries[named]
-	if ok {
-		return nil, ErrNamedLoggerAlreadyRegistered
-	}
-	s.entries[named] = l
-
-	return l, nil
+	return l
 }
 
 func NewService(cfg configManager) (*Service, error) {
@@ -71,7 +55,6 @@ func NewService(cfg configManager) (*Service, error) {
 	logsLevel := new(zapcore.Level)
 	err := logsLevel.Set(cfg.GetMinimalLogLevel())
 	if err != nil {
-		log.Fatal(err.Error())
 		return nil, err
 	}
 
@@ -85,7 +68,6 @@ func NewService(cfg configManager) (*Service, error) {
 
 	defaultLogger, err := lCfg.Build()
 	if err != nil {
-		log.Fatal(err.Error())
 		return nil, err
 	}
 
@@ -95,6 +77,5 @@ func NewService(cfg configManager) (*Service, error) {
 		cfg:           cfg,
 		defaultLogger: defaultLogger,
 		cores:         cores,
-		entries:       make(map[string]*zap.Logger),
 	}, nil
 }
