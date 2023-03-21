@@ -7,10 +7,10 @@ type Config struct {
 	// -------------------
 	// MinimalLogsLevel is a level for setup minimal logger event notification.
 	// Allowed values: debug, info, warn, error, dpanic, panic, fatal
-	MinimalLogsLevel string `envconfig:"APP_LOGGER_LEVEL" default:"debug"`
+	MinimalLogsLevel string `envconfig:"LOGGER_LEVEL" default:"debug"`
 	// StackTraceEnable is option for enable or disable stacktrace at zap.Logger level
 	// Allowed values: true, false
-	StackTraceEnable bool `envconfig:"APP_LOGGER_STACKTRACE_ENABLE" default:"false"`
+	StackTraceEnable bool `envconfig:"LOGGER_STACKTRACE_ENABLE" default:"false"`
 	// -------------------
 	// Graylog configs
 	// -------------------
