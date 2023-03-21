@@ -14,7 +14,7 @@ type LoggerConfig struct {
 	// -------------------
 	// Graylog configs
 	// -------------------
-	GraylogEnable           bool   `envconfig:"GRAYLOG_ENABLE"`
+	GraylogEnable           bool   `envconfig:"GRAYLOG_ENABLE" default:"false"`
 	GraylogAddress          string `envconfig:"GRAYLOG_ADDRESS" default:"127.0.0.1:12201"`
 	GraylogHost             string `envconfig:"GRAYLOG_HOST" default:"localhost"`
 	GraylogVersion          string `envconfig:"GRAYLOG_VERSION" default:"1.1"`
@@ -23,7 +23,7 @@ type LoggerConfig struct {
 	// Bugsnag configs
 	// ---------------
 	// BugsnagApiKey ...
-	BugsnagEnable bool   `envconfig:"BUGSNAG_ENABLE"`
+	BugsnagEnable bool   `envconfig:"BUGSNAG_ENABLE"  default:"false"`
 	BugsnagApiKey string `envconfig:"BUGSNAG_API_KEY" default:""`
 	// BugsnagMinimalLogsLevel is a level for setup minimal bugsnag logger event notification
 	// allowed: debug, info, warn, error, dpanic, panic, fatal
@@ -31,7 +31,7 @@ type LoggerConfig struct {
 	// ---------------
 	// Sentry configs
 	// ---------------
-	SentryEnable bool `envconfig:"SENTRY_ENABLE"`
+	SentryEnable bool `envconfig:"SENTRY_ENABLE" default:"false"`
 	// SentryHost ...
 	SentryHost string `envconfig:"SENTRY_HOST" default:"localhost"`
 	// BugsnagMinimalLogsLevel is a level for setup minimal bugsnag logger event notification
