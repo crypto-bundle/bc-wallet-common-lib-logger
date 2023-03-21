@@ -1,7 +1,7 @@
 package logger
 
-// Config is config for logger service
-type Config struct {
+// LoggerConfig is config for logger service
+type LoggerConfig struct {
 	// -------------------
 	// Application configs
 	// -------------------
@@ -39,10 +39,10 @@ type Config struct {
 	SentryMinimalLogsLevel string `envconfig:"SENTRY_LOGGER_LEVEL" default:"warn"`
 }
 
-func (c *Config) GetMinimalLogLevel() string {
+func (c *LoggerConfig) GetMinimalLogLevel() string {
 	return c.MinimalLogsLevel
 }
 
-func (c *Config) IsStacktraceEnabled() bool {
+func (c *LoggerConfig) IsStacktraceEnabled() bool {
 	return c.StackTraceEnable
 }
