@@ -21,10 +21,10 @@ import (
 	"context"
 	"time"
 	
-	commonEnvConfig "github.com/crypto-bundle/bc-wallet-common-lib-config/pkg/envconfig"
-	commonLogger "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger"
-	commonVault "github.com/crypto-bundle/bc-wallet-common-lib-vault/pkg/vault"
-	commonVaultTokenClient "github.com/crypto-bundle/bc-wallet-common-lib-vault/pkg/vault/client/token"
+	commonEnvConfig "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-config/pkg/config"
+	commonLogger "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-logger/pkg/logger"
+	commonVault "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-vault/pkg/vault"
+	commonVaultTokenClient "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-vault/pkg/vault/client/token"
 
 	"go.uber.org/zap"
 )
@@ -69,6 +69,9 @@ func main() {
 
 ```
 
+
 ## Licence
 
-**bc-wallet-common-lib-postgres** is licensed under the [MIT](./LICENSE) License.
+**bc-wallet-common-lib-logger** has a proprietary license.
+
+Switched to proprietary license from MIT - [CHANGELOG.MD - v0.0.12](./CHANGELOG.md)

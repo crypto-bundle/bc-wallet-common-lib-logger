@@ -1,6 +1,6 @@
-module github.com/crypto-bundle/bc-wallet-common-lib-logger
+module gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-logger
 
-go 1.17
+go 1.19
 
 require go.uber.org/zap v1.21.0
 
