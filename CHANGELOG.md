@@ -5,7 +5,7 @@
 ### Changed
 
 #### Switching to a proprietary license.
-License of **bc-wallet-common-lib-logger** repository changed to proprietary.
+License of **bc-wallet-common-lib-logger** repository changed to proprietary - commit revision number **2dbe5e9c2d507631e00b4283cfac9c121621185a**.
 
 The MIT license is replaced by me (_Kotelnikov Aleksei_) as an author and maintainer.
 
