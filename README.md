@@ -72,6 +72,4 @@ func main() {
 
 ## Licence
 
-**bc-wallet-common-lib-logger** has a proprietary license.
-
-Switched to proprietary license from MIT - [CHANGELOG.MD - v0.0.12](./CHANGELOG.md)
+**bc-wallet-common-lib-logger** is licensed under the [MIT](./LICENSE) License.
