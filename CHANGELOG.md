@@ -1,19 +1,23 @@
 # Change Log
 
-## [v0.0.12] - 24.04.2023 21:41 MSK
+## [v0.0.1] - 18.02.2023 20:38 MSK
 
 ### Changed
+* Separated logger in another repository - https://github.com/crypto-bundle/bc-wallet-common-lib-logger. 
+* Extended main logger default fields
+* Removed ld-flags from default logger fields
 
-#### Switching to a proprietary license.
-License of **bc-wallet-common-lib-logger** repository changed to proprietary - commit revision number **2dbe5e9c2d507631e00b4283cfac9c121621185a**.
-
-The MIT license is replaced by me (_Kotelnikov Aleksei_) as an author and maintainer.
-
-The license has been replaced with a proprietary one, with the condition of maintaining the authorship
-and specifying in the README.md file in the section of authors and contributors.
-
+### Added
+* Licensed under MIT-license
+* 
 [@gudron (Kotelnikov Aleksei)](https://github.com/gudron) - author and maintainer of [crypto-bundle project](https://github.com/crypto-bundle)
 
 The commit is signed with the key -
 gudron2s@gmail.com
 E456BB23A18A9347E952DBC6655133DD561BF3EC
+
+## [v0.0.2] - 09.02.2024 12:56 MSK
+
+### Changed
+* Removed graylog, sentry and bugsnag config fields from default config
+
