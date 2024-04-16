@@ -13,14 +13,15 @@ type configManager interface {
 	IsLocal() bool
 	GetStageName() string
 
-	GetMinimalLogLevel() string
-	IsStacktraceEnabled() bool
 	GetApplicationPID() int
-	GetVersion() string
 	GetReleaseTag() string
 	GetCommitID() string
 	GetShortCommitID() string
 	GetBuildNumber() uint64
 	GetBuildDateTS() int64
 	GetBuildDate() time.Time
+
+	GetMinimalLogLevel() string
+	GetSkipBuildInfo() bool
+	IsStacktraceEnabled() bool
 }

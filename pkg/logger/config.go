@@ -11,6 +11,7 @@ type LoggerConfig struct {
 	// StackTraceEnable is option for enable or disable stacktrace at zap.Logger level
 	// Allowed values: true, false
 	StackTraceEnable bool `envconfig:"LOGGER_STACKTRACE_ENABLE" default:"false"`
+	SkipBuildInfo    bool `envconfig:"LOGGER_SKIP_BUILD_INFO" default:"false"`
 }
 
 func (c *LoggerConfig) GetMinimalLogLevel() string {
@@ -19,4 +20,8 @@ func (c *LoggerConfig) GetMinimalLogLevel() string {
 
 func (c *LoggerConfig) IsStacktraceEnabled() bool {
 	return c.StackTraceEnable
+}
+
+func (c *LoggerConfig) GetSkipBuildInfo() bool {
+	return c.SkipBuildInfo
 }
