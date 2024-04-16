@@ -26,9 +26,9 @@ func (s *Service) NewLoggerEntry(named string) *zap.Logger {
 		zap.Int(ApplicationPID, s.cfg.GetApplicationPID()))
 
 	isDevOrLocal := s.cfg.IsDev() || s.cfg.IsLocal()
-	if !isDevOrLocal {
-		l = l.With(zap.String(VersionTag, s.cfg.GetVersion()),
-			zap.String(SVCReleaseTag, s.cfg.GetReleaseTag()),
+	buildInfoEnabled := isDevOrLocal && s.cfg.GetSkipBuildInfo()
+	if buildInfoEnabled {
+		l = l.With(zap.String(SVCReleaseTag, s.cfg.GetReleaseTag()),
 			zap.String(SVCCommitShortID, s.cfg.GetShortCommitID()),
 			zap.String(SVCCommitID, s.cfg.GetCommitID()),
 			zap.Uint64(BuildNumberTag, s.cfg.GetBuildNumber()),

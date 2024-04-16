@@ -23,3 +23,9 @@ E456BB23A18A9347E952DBC6655133DD561BF3EC
 ## [v0.0.3] - 09.02.2024 14:22 MSK
 ### Changed
 * Replaced content of LICENSE file - to MIT license
+
+## [v0.0.4] - 16.04.2024
+### Changed
+* Bump golang version 1.19 -> 1.22
+* Bump zap.Logger version
+* Added support of new config manager dependencies(support of ldflasg https://github.com/crypto-bundle/bc-wallet-common-lib-config)

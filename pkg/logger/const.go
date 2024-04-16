@@ -5,7 +5,6 @@ const (
 	EnvironmentNameTag    = "environment"
 	StageNameTag          = "stage"
 	ApplicationPID        = "pid"
-	VersionTag            = "version"
 	SVCReleaseTag         = "svc_release"
 	SVCCommitShortID      = "svc_commit_short_hash"
 	SVCCommitID           = "svc_commit_hash"
