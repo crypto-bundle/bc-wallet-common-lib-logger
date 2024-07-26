@@ -38,11 +38,17 @@ import (
 	"go.uber.org/zap"
 )
 
+type StdFields map[string]interface{}
+
 type stdLogFabric struct {
 	zapMakerFunc func(named string) *zap.Logger
 }
 
-func (s *stdLogFabric) WithFields(name string, fields map[string]interface{}) *log.Logger {
+func (s *stdLogFabric) WithFields(name string, fields StdFields) *log.Logger {
+	return s.NamedWithFields(name, fields)
+}
+
+func (s *stdLogFabric) NamedWithFields(name string, fields StdFields) *log.Logger {
 	zapAnyFields := make([]zap.Field, len(fields))
 	var i int
 
@@ -51,6 +57,24 @@ func (s *stdLogFabric) WithFields(name string, fields map[string]interface{}) *l
 	}
 
 	l := s.zapMakerFunc(name).With(zapAnyFields...)
+
+	return zap.NewStdLog(l)
+}
+
+type singleNameStdLogFabric struct {
+	zapMakerFunc func(named string) *zap.Logger
+	name         string
+}
+
+func (s *singleNameStdLogFabric) WithFields(fields StdFields) *log.Logger {
+	zapAnyFields := make([]zap.Field, len(fields))
+	var i int
+
+	for fieldName, fieldValue := range fields {
+		zapAnyFields[i] = zap.Any(fieldName, fieldValue)
+	}
+
+	l := s.zapMakerFunc(s.name).With(zapAnyFields...)
 
 	return zap.NewStdLog(l)
 }
