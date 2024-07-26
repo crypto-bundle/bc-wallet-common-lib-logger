@@ -2,7 +2,7 @@
 
 ## [v0.0.5] - 25.07.2024
 ### Added 
-* Added std Logger fabric method 
+* Added std Logger fabric method for making new instances of log.Logger 
 ### Changed
 * Changed MIT License to NON-AI MIT
 * Changed example section in README.md file
