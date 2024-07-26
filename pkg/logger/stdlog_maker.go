@@ -33,24 +33,24 @@
 package logger
 
 import (
-	"testing"
+	"log"
 
 	"go.uber.org/zap"
-	"go.uber.org/zap/zaptest"
 )
 
-type MockSrv struct {
-	t *testing.T
+type stdLogFabric struct {
+	zapMakerFunc func(named string) *zap.Logger
 }
 
-func (m *MockSrv) NewLoggerEntry(_ string) (*zap.Logger, error) {
-	return zaptest.NewLogger(m.t), nil
-}
+func (s *stdLogFabric) WithFields(name string, fields map[string]interface{}) *log.Logger {
+	zapAnyFields := make([]zap.Field, len(fields))
+	var i int
 
-func (m *MockSrv) NewLoggerEntryWithFields(named string, fields ...zap.Field) (*zap.Logger, error) {
-	return zaptest.NewLogger(m.t), nil
-}
+	for fieldName, fieldValue := range fields {
+		zapAnyFields[i] = zap.Any(fieldName, fieldValue)
+	}
 
-func NewLoggerServiceMock(t *testing.T) *MockSrv {
-	return &MockSrv{t: t}
+	l := s.zapMakerFunc(name).With(zapAnyFields...)
+
+	return zap.NewStdLog(l)
 }
