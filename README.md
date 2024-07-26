@@ -7,8 +7,17 @@ Library for manage logger config and zap.Logger cores
 Library contains:
 * common logger config struct
 * management of zap.Core instances via small wrapper service-component
+* management of std logger cores
 
 ## Usage example
+
+### Environment variables
+
+* `LOGGER_LEVEL` - MinimalLogsLevel is a level for setup minimal logger information level.
+These values of logger level will be passed to zap.Logger setup.
+Allowed values: debug, info, warn, error, dpanic, panic, fatal. 
+* `LOGGER_STACKTRACE_ENABLE` - Enable logger stacktrace
+* `LOGGER_SKIP_BUILD_INFO` - Build zap.Logger cores without application build-info fields
 
 Examples of preparing config and create instance of logger service-component
 

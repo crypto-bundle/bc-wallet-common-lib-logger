@@ -5,6 +5,7 @@
 * Added std Logger fabric method for making new instances of log.Logger 
 ### Changed
 * Changed MIT License to NON-AI MIT
+* Added NON-AI MIT copyright banner to all *.go files
 * Changed example section in README.md file
 
 ## [v0.0.4] - 16.04.2024
