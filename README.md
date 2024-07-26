@@ -19,52 +19,47 @@ package main
 
 import (
 	"context"
-	"time"
-	
-	commonEnvConfig "github.com/crypto-bundle/bc-wallet-common-lib-config/pkg/config"
-	commonLogger "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger"
-	commonVault "github.com/crypto-bundle/bc-wallet-common-lib-vault/pkg/vault"
-	commonVaultTokenClient "github.com/crypto-bundle/bc-wallet-common-lib-vault/pkg/vault/client/token"
+	"log"
 
-	"go.uber.org/zap"
+	commonConfig "github.com/crypto-bundle/bc-wallet-common-lib-config/pkg/config"
+	commonLogger "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger"
 )
 
-type VaultWrappedConfig struct {
-	*commonVault.BaseConfig
-	*commonVaultTokenClient.AuthConfig
+type applicationConfig struct {
+	*commonConfig.BaseConfig
+	*commonLogger.LoggerConfig
 }
 
 func main() {
-	ctx := context.Background()
+	var err error
+	ctx, _ := context.WithCancel(context.Background())
 
-	// vault prepare
-	vaultSrv, err := commonVault.NewService(ctx, vaultCfg, vaultClientSrv)
-	if err != nil {
-		panic(err)
-	}
+	appCfg := &applicationConfig{}
 
-	_, err = vaultSrv.Login(ctx)
-	if err != nil {
-		panic(err)
-	}
+	baseCfgPreparerSvc := commonConfig.NewConfigManager()
 
-	// logger config prepare
-	loggerConfig := commonLogger.LoggerConfig{}
-	pgCfgPreparerSrv := commonEnvConfig.NewConfigManager()
-	err = pgCfgPreparerSrv.PrepareTo(loggerConfig).With(vaultSrv).Do(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	// logger instance service creation
-	loggerSrv, err := commonLogger.NewService(appCfg)
+	baseCfg := commonConfig.NewBaseConfig("application_name")
+	err = baseCfgPreparerSvc.PrepareTo(baseCfg).Do(ctx)
 	if err != nil {
 		log.Fatal(err.Error(), err)
 	}
-	loggerEntry := loggerSrv.NewLoggerEntry("main") // zap.Logger("go.uber.org/zap") instance will be returned here
 
-	// usage 
-	loggerEntry.Info("application started successfully", zap.Time("start time", time.Now()))
+	loggerSvc, err := commonLogger.NewService(appCfg)
+	if err != nil {
+		log.Fatal(err.Error(), err)
+	}
+	stdLoggerFabric := loggerSvc.NewStdLogMaker()
+	zapLoggerEntry := loggerSvc.NewLoggerEntry("main")
+	stdLoggerEntry := stdLoggerFabric.WithFields("stdLoggerName", map[string]interface{}{
+		"test_field":  "test_value",
+		"test_field1": "test_value2",
+	})
+
+	stdLoggerEntry.Print("std logger info")
+	// usage
+	zapLoggerEntry.Info("zap logger info")
+}
+
 }
 
 ```

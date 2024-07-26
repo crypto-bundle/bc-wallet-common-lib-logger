@@ -13,6 +13,10 @@ type Service struct {
 }
 
 func (s *Service) NewLoggerEntry(named string) *zap.Logger {
+	return s.newLoggerEntry(named)
+}
+
+func (s *Service) newLoggerEntry(named string) *zap.Logger {
 	var cores = []zapcore.Core{
 		s.defaultLogger.Core(),
 	}
@@ -50,6 +54,12 @@ func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) *z
 	l = l.Named(named).With(fields...)
 
 	return l
+}
+
+func (s *Service) NewStdLogMaker() *stdLogFabric {
+	return &stdLogFabric{
+		zapMakerFunc: s.newLoggerEntry,
+	}
 }
 
 func NewService(cfg configManager) (*Service, error) {
