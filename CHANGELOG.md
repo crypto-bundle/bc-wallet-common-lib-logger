@@ -1,6 +1,6 @@
 # Change Log
 
-## [v0.0.5] - 25.07.2024
+## [v0.0.5] - 26.07.2024
 ### Added 
 * Added std Logger fabric method for making new instances of log.Logger 
 ### Changed
