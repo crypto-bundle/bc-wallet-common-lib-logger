@@ -94,6 +94,13 @@ func (s *Service) NewStdLogMaker() *stdLogFabric {
 	}
 }
 
+func (s *Service) NewNamedStdLogMaker(name string) *singleNameStdLogFabric {
+	return &singleNameStdLogFabric{
+		zapMakerFunc: s.newLoggerEntry,
+		name:         name,
+	}
+}
+
 func NewService(cfg configManager) (*Service, error) {
 	cores := make([]zapcore.Core, 1)
 
