@@ -62,7 +62,7 @@ var kinds = map[slog.Kind]func(attr slog.Attr) zap.Field{
 	},
 }
 
-func extractFields(record slog.Record) []zap.Field {
+func ExtractFields(record slog.Record) []zap.Field {
 	zapFields := make([]zap.Field, record.NumAttrs())
 
 	index := 0
