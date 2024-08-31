@@ -30,91 +30,107 @@
  *
  */
 
-package logger
+package slog
 
 import (
+	"context"
+	"runtime"
+
+	"log/slog"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-type Service struct {
-	cfg configManager
+type Option struct {
+	// log level (default: debug)
+	Level slog.Leveler
 
-	defaultLogger *zap.Logger
-	cores         []zapcore.Core
+	// optional: zap logger (default: zap.L())
+	Logger *zap.Logger
+	// optional: fetch attributes from context
+	AttrFromContext []func(ctx context.Context) []slog.Attr
+
+	// optional: see slog.HandlerOptions
+	AddSource   bool
+	ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
 }
 
-func (s *Service) NewLoggerEntry(named string) *zap.Logger {
-	return s.newLoggerEntry(named)
+func (o Option) NewZapHandler() slog.Handler {
+	if o.Level == nil {
+		o.Level = slog.LevelDebug
+	}
+
+	if o.Logger == nil {
+		// should be selected lazily ?
+		o.Logger = zap.L()
+	}
+
+	if o.AttrFromContext == nil {
+		o.AttrFromContext = []func(ctx context.Context) []slog.Attr{}
+	}
+
+	return &ZapHandler{
+		option: o,
+		attrs:  []slog.Attr{},
+		groups: []string{},
+	}
 }
 
-func (s *Service) newLoggerEntry(named string) *zap.Logger {
-	var cores = []zapcore.Core{
-		s.defaultLogger.Core(),
-	}
+var _ slog.Handler = (*ZapHandler)(nil)
 
-	l := zap.New(zapcore.NewTee(cores...))
-	zap.ReplaceGlobals(l)
-
-	l = l.Named(named).With(zap.String(HostnameFieldTag, s.cfg.GetHostName()),
-		zap.String(EnvironmentNameTag, s.cfg.GetEnvironmentName()),
-		zap.String(StageNameTag, s.cfg.GetStageName()),
-		zap.Int(ApplicationPID, s.cfg.GetApplicationPID()))
-
-	isDevOrLocal := s.cfg.IsDev() || s.cfg.IsLocal()
-	buildInfoEnabled := isDevOrLocal && s.cfg.GetSkipBuildInfo()
-	if buildInfoEnabled {
-		l = l.With(zap.String(SVCReleaseTag, s.cfg.GetReleaseTag()),
-			zap.String(SVCCommitShortID, s.cfg.GetShortCommitID()),
-			zap.String(SVCCommitID, s.cfg.GetCommitID()),
-			zap.Uint64(BuildNumberTag, s.cfg.GetBuildNumber()),
-			zap.Time(BuildDateTag, s.cfg.GetBuildDate()),
-			zap.Uint64(BuildDateTimestampTag, uint64(s.cfg.GetBuildDateTS())))
-	}
-
-	return l
+type ZapHandler struct {
+	option Option
+	attrs  []slog.Attr
+	groups []string
 }
 
-func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger {
-	var cores = []zapcore.Core{
-		s.defaultLogger.Core(),
-	}
-
-	l := zap.New(zapcore.NewTee(cores...))
-	zap.ReplaceGlobals(l)
-
-	l = l.Named(named).With(fields...)
-
-	return l
+func (h *ZapHandler) Enabled(_ context.Context, level slog.Level) bool {
+	return level >= h.option.Level.Level()
 }
 
-func NewService(cfg configManager) (*Service, error) {
-	cores := make([]zapcore.Core, 1)
+func (h *ZapHandler) Handle(_ context.Context, record slog.Record) error {
+	level := LogLevels[record.Level]
 
-	logsLevel := new(zapcore.Level)
-	err := logsLevel.Set(cfg.GetMinimalLogLevel())
-	if err != nil {
-		return nil, err
+	fields := extractFields(record)
+
+	checked := h.option.Logger.Check(level, record.Message)
+	if checked != nil {
+		if h.option.AddSource {
+			frame, _ := runtime.CallersFrames([]uintptr{record.PC}).Next()
+			checked.Caller = zapcore.NewEntryCaller(0, frame.File, frame.Line, true)
+			checked.Stack = "" //@TODO
+		} else {
+			checked.Caller = zapcore.EntryCaller{}
+			checked.Stack = ""
+		}
+
+		checked.Write(fields...)
+		return nil
+	} else {
+		h.option.Logger.Log(level, record.Message, fields...)
 	}
 
-	lCfg := zap.NewProductionConfig()
-	lCfg.Level = zap.NewAtomicLevelAt(*logsLevel)
-	lCfg.DisableStacktrace = !cfg.IsStacktraceEnabled() // We use errs.ZapStack to get stacktrace
-	lCfg.OutputPaths = []string{"stdout"}
-	if cfg.IsDebug() {
-		lCfg.Level.SetLevel(zap.DebugLevel)
+	return nil
+}
+
+func (h *ZapHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &ZapHandler{
+		option: h.option,
+		attrs:  append(h.attrs, attrs...),
+		groups: h.groups,
+	}
+}
+
+func (h *ZapHandler) WithGroup(name string) slog.Handler {
+	// https://cs.opensource.google/go/x/exp/+/46b07846:slog/handler.go;l=247
+	if name == "" {
+		return h
 	}
 
-	defaultLogger, err := lCfg.Build()
-	if err != nil {
-		return nil, err
+	return &ZapHandler{
+		option: h.option,
+		attrs:  h.attrs,
+		groups: append(h.groups, name),
 	}
-
-	cores[0] = defaultLogger.Core()
-
-	return &Service{
-		cfg:           cfg,
-		defaultLogger: defaultLogger,
-		cores:         cores,
-	}, nil
 }

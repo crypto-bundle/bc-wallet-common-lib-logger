@@ -30,91 +30,64 @@
  *
  */
 
-package logger
+package log
 
 import (
+	"log"
+
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
-type Service struct {
-	cfg configManager
+type StdFields map[string]interface{}
 
-	defaultLogger *zap.Logger
-	cores         []zapcore.Core
+type stdLogFabric struct {
+	zapMakerFunc func(named string) *zap.Logger
 }
 
-func (s *Service) NewLoggerEntry(named string) *zap.Logger {
-	return s.newLoggerEntry(named)
+func (s *stdLogFabric) WithFields(name string, fields StdFields) *log.Logger {
+	return s.NamedWithFields(name, fields)
 }
 
-func (s *Service) newLoggerEntry(named string) *zap.Logger {
-	var cores = []zapcore.Core{
-		s.defaultLogger.Core(),
+func (s *stdLogFabric) NamedWithFields(name string, fields StdFields) *log.Logger {
+	zapAnyFields := make([]zap.Field, len(fields))
+	var i int
+
+	for fieldName, fieldValue := range fields {
+		zapAnyFields[i] = zap.Any(fieldName, fieldValue)
 	}
 
-	l := zap.New(zapcore.NewTee(cores...))
-	zap.ReplaceGlobals(l)
+	l := s.zapMakerFunc(name).With(zapAnyFields...)
 
-	l = l.Named(named).With(zap.String(HostnameFieldTag, s.cfg.GetHostName()),
-		zap.String(EnvironmentNameTag, s.cfg.GetEnvironmentName()),
-		zap.String(StageNameTag, s.cfg.GetStageName()),
-		zap.Int(ApplicationPID, s.cfg.GetApplicationPID()))
-
-	isDevOrLocal := s.cfg.IsDev() || s.cfg.IsLocal()
-	buildInfoEnabled := isDevOrLocal && s.cfg.GetSkipBuildInfo()
-	if buildInfoEnabled {
-		l = l.With(zap.String(SVCReleaseTag, s.cfg.GetReleaseTag()),
-			zap.String(SVCCommitShortID, s.cfg.GetShortCommitID()),
-			zap.String(SVCCommitID, s.cfg.GetCommitID()),
-			zap.Uint64(BuildNumberTag, s.cfg.GetBuildNumber()),
-			zap.Time(BuildDateTag, s.cfg.GetBuildDate()),
-			zap.Uint64(BuildDateTimestampTag, uint64(s.cfg.GetBuildDateTS())))
-	}
-
-	return l
+	return zap.NewStdLog(l)
 }
 
-func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger {
-	var cores = []zapcore.Core{
-		s.defaultLogger.Core(),
-	}
-
-	l := zap.New(zapcore.NewTee(cores...))
-	zap.ReplaceGlobals(l)
-
-	l = l.Named(named).With(fields...)
-
-	return l
+type singleNameStdLogFabric struct {
+	zapMakerFunc func(named string) *zap.Logger
+	name         string
 }
 
-func NewService(cfg configManager) (*Service, error) {
-	cores := make([]zapcore.Core, 1)
+func (s *singleNameStdLogFabric) WithFields(fields StdFields) *log.Logger {
+	zapAnyFields := make([]zap.Field, len(fields))
+	var i int
 
-	logsLevel := new(zapcore.Level)
-	err := logsLevel.Set(cfg.GetMinimalLogLevel())
-	if err != nil {
-		return nil, err
+	for fieldName, fieldValue := range fields {
+		zapAnyFields[i] = zap.Any(fieldName, fieldValue)
 	}
 
-	lCfg := zap.NewProductionConfig()
-	lCfg.Level = zap.NewAtomicLevelAt(*logsLevel)
-	lCfg.DisableStacktrace = !cfg.IsStacktraceEnabled() // We use errs.ZapStack to get stacktrace
-	lCfg.OutputPaths = []string{"stdout"}
-	if cfg.IsDebug() {
-		lCfg.Level.SetLevel(zap.DebugLevel)
+	l := s.zapMakerFunc(s.name).With(zapAnyFields...)
+
+	return zap.NewStdLog(l)
+}
+
+func NewStdLogMaker(zapLogger *zap.Logger) *stdLogFabric {
+	return &stdLogFabric{
+		zapMakerFunc: zapLogger.Named,
 	}
+}
 
-	defaultLogger, err := lCfg.Build()
-	if err != nil {
-		return nil, err
+func NewNamedStdLogMaker(zapLogger *zap.Logger, name string) *singleNameStdLogFabric {
+	return &singleNameStdLogFabric{
+		zapMakerFunc: zapLogger.Named,
+		name:         name,
 	}
-
-	cores[0] = defaultLogger.Core()
-
-	return &Service{
-		cfg:           cfg,
-		defaultLogger: defaultLogger,
-		cores:         cores,
-	}, nil
 }
