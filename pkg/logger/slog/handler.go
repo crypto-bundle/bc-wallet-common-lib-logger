@@ -34,9 +34,8 @@ package slog
 
 import (
 	"context"
-	"runtime"
-
 	"log/slog"
+	"runtime"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -95,20 +94,23 @@ func (h *ZapHandler) Handle(_ context.Context, record slog.Record) error {
 	fields := ExtractFields(record)
 
 	checked := h.option.Logger.Check(level, record.Message)
-	if checked != nil {
-		if h.option.AddSource {
-			frame, _ := runtime.CallersFrames([]uintptr{record.PC}).Next()
-			checked.Caller = zapcore.NewEntryCaller(0, frame.File, frame.Line, true)
-			checked.Stack = "" //@TODO
-		} else {
-			checked.Caller = zapcore.EntryCaller{}
-			checked.Stack = ""
-		}
+
+	switch true {
+	case checked == nil:
+		fallthrough
+	default:
+		h.option.Logger.Log(level, record.Message, fields...)
+	case checked != nil && h.option.AddSource:
+		frame, _ := runtime.CallersFrames([]uintptr{record.PC}).Next()
+		checked.Caller = zapcore.NewEntryCaller(0, frame.File, frame.Line, true)
+		checked.Stack = "" //@TODO
 
 		checked.Write(fields...)
-		return nil
-	} else {
-		h.option.Logger.Log(level, record.Message, fields...)
+	case checked != nil && !h.option.AddSource:
+		checked.Caller = zapcore.EntryCaller{}
+		checked.Stack = ""
+
+		checked.Write(fields...)
 	}
 
 	return nil

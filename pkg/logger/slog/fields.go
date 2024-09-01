@@ -38,28 +38,46 @@ import (
 	"go.uber.org/zap"
 )
 
-var kinds = map[slog.Kind]func(attr slog.Attr) zap.Field{
-	slog.KindBool: func(attr slog.Attr) zap.Field {
-		return zap.Bool(attr.Key, attr.Value.Bool())
-	},
-	slog.KindDuration: func(attr slog.Attr) zap.Field {
-		return zap.Duration(attr.Key, attr.Value.Duration())
-	},
-	slog.KindString: func(attr slog.Attr) zap.Field {
-		return zap.String(attr.Key, attr.Value.String())
-	},
-	slog.KindTime: func(attr slog.Attr) zap.Field {
-		return zap.Time(attr.Key, attr.Value.Time())
-	},
-	slog.KindInt64: func(attr slog.Attr) zap.Field {
-		return zap.Int64(attr.Key, attr.Value.Int64())
-	},
-	slog.KindUint64: func(attr slog.Attr) zap.Field {
-		return zap.Uint64(attr.Key, attr.Value.Uint64())
-	},
-	slog.KindFloat64: func(attr slog.Attr) zap.Field {
-		return zap.Float64(attr.Key, attr.Value.Float64())
-	},
+func getFieldMapCallback(kind slog.Kind) func(attr slog.Attr) zap.Field {
+	switch kind {
+	case slog.KindBool:
+		return func(attr slog.Attr) zap.Field {
+			return zap.Bool(attr.Key, attr.Value.Bool())
+		}
+
+	case slog.KindDuration:
+		return func(attr slog.Attr) zap.Field {
+			return zap.Duration(attr.Key, attr.Value.Duration())
+		}
+
+	case slog.KindString:
+		return func(attr slog.Attr) zap.Field {
+			return zap.String(attr.Key, attr.Value.String())
+		}
+
+	case slog.KindTime:
+		return func(attr slog.Attr) zap.Field {
+			return zap.Time(attr.Key, attr.Value.Time())
+		}
+
+	case slog.KindInt64:
+		return func(attr slog.Attr) zap.Field {
+			return zap.Int64(attr.Key, attr.Value.Int64())
+		}
+
+	case slog.KindUint64:
+		return func(attr slog.Attr) zap.Field {
+			return zap.Uint64(attr.Key, attr.Value.Uint64())
+		}
+
+	case slog.KindFloat64:
+		return func(attr slog.Attr) zap.Field {
+			return zap.Float64(attr.Key, attr.Value.Float64())
+		}
+
+	default:
+		return nil
+	}
 }
 
 func ExtractFields(record slog.Record) []zap.Field {
@@ -70,8 +88,8 @@ func ExtractFields(record slog.Record) []zap.Field {
 	record.Attrs(func(attr slog.Attr) bool {
 		kind := attr.Value.Kind()
 
-		clb, isExists := kinds[attr.Value.Kind()]
-		if isExists {
+		clb := getFieldMapCallback(attr.Value.Kind())
+		if clb != nil {
 			zapFields[index] = clb(attr)
 			index++
 
@@ -101,8 +119,8 @@ func MapFields(attrs []slog.Attr) []zap.Field {
 		attr := attrs[i]
 		kind := attr.Value.Kind()
 
-		clb, isExists := kinds[kind]
-		if isExists {
+		clb := getFieldMapCallback(attr.Value.Kind())
+		if clb != nil {
 			zapFields[index] = clb(attr)
 			index++
 
