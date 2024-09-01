@@ -38,6 +38,55 @@ import (
 	"time"
 )
 
+func TestMapFields(t *testing.T) {
+	type testCase struct {
+		logLevel          slog.Level
+		logMessage        string
+		attributes        []slog.Attr
+		expectedAttrCount uint
+	}
+
+	var testCases = []testCase{
+		{
+			logLevel:   slog.LevelError,
+			logMessage: "some error",
+			attributes: []slog.Attr{
+				slog.String("big_error_tag", "big_error_value"),
+				slog.Uint64("big_uint_error_tag", 100500),
+				slog.Group("big_group_error_tag",
+					slog.Uint64("big_group_uint_error_tag", 100501),
+					slog.Uint64("big_group_uint_error_tag", 100502),
+					slog.Float64("big_group_float_error_tag", 100503.222),
+				),
+				slog.Uint64("big_uint_error_tag_2", 100503),
+				slog.Uint64("big_uint_error_tag_3", 100504),
+				slog.Uint64("big_uint_error_tag_4", 100505),
+				slog.Uint64("big_uint_error_tag_5", 100506),
+				slog.Uint64("big_uint_error_tag_6", 100507),
+				slog.Uint64("big_uint_error_tag_7", 100508),
+				slog.Group("big_group_2_error_tag",
+					slog.Uint64("big_group_2_uint_error_tag", 100508),
+					slog.Uint64("big_group_2_uint_error_tag", 100509),
+					slog.Float64("big_group_2_float_error_tag", 100509.999),
+				),
+				slog.Uint64("big_uint_error_tag_8", 100510),
+				slog.Uint64("big_uint_error_tag_9", 100511),
+			},
+			expectedAttrCount: 16,
+		},
+	}
+
+	for _, tCase := range testCases {
+		zapFields := MapFields(tCase.attributes)
+		zapFieldsCount := uint(len(zapFields))
+
+		if zapFieldsCount != tCase.expectedAttrCount {
+			t.Errorf("zap fields count not equal with expected, current: %d, expected: %d",
+				zapFieldsCount, tCase.expectedAttrCount)
+		}
+	}
+}
+
 func TestExtractFields(t *testing.T) {
 	type testCase struct {
 		logLevel          slog.Level

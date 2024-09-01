@@ -79,8 +79,11 @@ func ExtractFields(record slog.Record) []zap.Field {
 		}
 
 		if kind == slog.KindGroup {
-			groupFields := mapFields(attr.Value.Group())
-			copy(zapFields[:index], groupFields)
+			groupFields := MapFields(attr.Value.Group())
+
+			zapFields = append(zapFields, make([]zap.Field, len(groupFields)-1)...)
+			copy(zapFields[index:], groupFields)
+
 			index += len(groupFields)
 		}
 
@@ -90,7 +93,7 @@ func ExtractFields(record slog.Record) []zap.Field {
 	return zapFields
 }
 
-func mapFields(attrs []slog.Attr) []zap.Field {
+func MapFields(attrs []slog.Attr) []zap.Field {
 	zapFields := make([]zap.Field, len(attrs))
 	index := 0
 
@@ -107,8 +110,11 @@ func mapFields(attrs []slog.Attr) []zap.Field {
 		}
 
 		if kind == slog.KindGroup {
-			groupFields := mapFields(attr.Value.Group())
-			copy(zapFields[:index], groupFields)
+			groupFields := MapFields(attr.Value.Group())
+
+			zapFields = append(zapFields, make([]zap.Field, len(groupFields)-1)...)
+			copy(zapFields[index:], groupFields)
+
 			index += len(groupFields)
 		}
 	}
