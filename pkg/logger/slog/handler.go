@@ -46,32 +46,21 @@ type Option struct {
 	Level slog.Leveler
 
 	// optional: zap logger (default: zap.L())
-	Logger *zap.Logger
-	// optional: fetch attributes from context
-	AttrFromContext []func(ctx context.Context) []slog.Attr
 
 	// optional: see slog.HandlerOptions
 	AddSource   bool
 	ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
 }
 
-func (o Option) NewZapHandler() slog.Handler {
-	if o.Level == nil {
-		o.Level = slog.LevelDebug
-	}
-
-	if o.Logger == nil {
+func NewZapHandler(attrs []slog.Attr, zapLogger *zap.Logger) slog.Handler {
+	if zapLogger == nil {
 		// should be selected lazily ?
-		o.Logger = zap.L()
-	}
-
-	if o.AttrFromContext == nil {
-		o.AttrFromContext = []func(ctx context.Context) []slog.Attr{}
+		zapLogger = zap.L()
 	}
 
 	return &ZapHandler{
-		option: o,
-		attrs:  []slog.Attr{},
+		Logger: zapLogger,
+		attrs:  attrs,
 		groups: []string{},
 	}
 }
@@ -79,6 +68,7 @@ func (o Option) NewZapHandler() slog.Handler {
 var _ slog.Handler = (*ZapHandler)(nil)
 
 type ZapHandler struct {
+	Logger *zap.Logger
 	option Option
 	attrs  []slog.Attr
 	groups []string
@@ -93,19 +83,21 @@ func (h *ZapHandler) Handle(_ context.Context, record slog.Record) error {
 
 	fields := ExtractFields(record)
 
-	checked := h.option.Logger.Check(level, record.Message)
+	checked := h.Logger.Check(level, record.Message)
 
 	switch true {
 	case checked == nil:
 		fallthrough
 	default:
-		h.option.Logger.Log(level, record.Message, fields...)
+		h.Logger.Log(level, record.Message, fields...)
+
 	case checked != nil && h.option.AddSource:
 		frame, _ := runtime.CallersFrames([]uintptr{record.PC}).Next()
 		checked.Caller = zapcore.NewEntryCaller(0, frame.File, frame.Line, true)
 		checked.Stack = "" //@TODO
 
 		checked.Write(fields...)
+
 	case checked != nil && !h.option.AddSource:
 		checked.Caller = zapcore.EntryCaller{}
 		checked.Stack = ""

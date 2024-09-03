@@ -33,6 +33,11 @@
 package logger
 
 import (
+	"log"
+	"log/slog"
+
+	stdLogWrapper "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger/log"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -42,6 +47,17 @@ type Service struct {
 
 	defaultLogger *zap.Logger
 	cores         []zapcore.Core
+}
+
+func (s *Service) NewStdLogger(named string) *log.Logger {
+	zapLogger := s.newLoggerEntry(named)
+
+	logMaker := stdLogWrapper.NewStdLogMaker(zapLogger)
+	logMaker.
+}
+
+func (s *Service) NewSlogEntry(named string) *slog.Logger {
+	return s.newLoggerEntry(named)
 }
 
 func (s *Service) NewLoggerEntry(named string) *zap.Logger {

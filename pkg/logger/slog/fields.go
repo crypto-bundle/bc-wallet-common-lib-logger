@@ -38,7 +38,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func getFieldMapCallback(kind slog.Kind) func(attr slog.Attr) zap.Field {
+func getFieldMapperFunc(kind slog.Kind) func(attr slog.Attr) zap.Field {
 	switch kind {
 	case slog.KindBool:
 		return func(attr slog.Attr) zap.Field {
@@ -88,9 +88,9 @@ func ExtractFields(record slog.Record) []zap.Field {
 	record.Attrs(func(attr slog.Attr) bool {
 		kind := attr.Value.Kind()
 
-		clb := getFieldMapCallback(attr.Value.Kind())
-		if clb != nil {
-			zapFields[index] = clb(attr)
+		mapperFunc := getFieldMapperFunc(attr.Value.Kind())
+		if mapperFunc != nil {
+			zapFields[index] = mapperFunc(attr)
 			index++
 
 			return true
@@ -119,9 +119,9 @@ func MapFields(attrs []slog.Attr) []zap.Field {
 		attr := attrs[i]
 		kind := attr.Value.Kind()
 
-		clb := getFieldMapCallback(attr.Value.Kind())
-		if clb != nil {
-			zapFields[index] = clb(attr)
+		mapperFunc := getFieldMapperFunc(attr.Value.Kind())
+		if mapperFunc != nil {
+			zapFields[index] = mapperFunc(attr)
 			index++
 
 			continue

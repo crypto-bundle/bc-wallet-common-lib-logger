@@ -41,11 +41,25 @@ import (
 type StdFields map[string]interface{}
 
 type stdLogFabric struct {
-	zapMakerFunc func(named string) *zap.Logger
+	zapNamedMakerFunc   func(named string) *zap.Logger
+	zapUnNamedMakerFunc func() *zap.Logger
 }
 
-func (s *stdLogFabric) WithFields(name string, fields StdFields) *log.Logger {
-	return s.NamedWithFields(name, fields)
+func (s *stdLogFabric) GetLogger() *log.Logger {
+	return zap.NewStdLog(s.zapUnNamedMakerFunc())
+}
+
+func (s *stdLogFabric) WithFields(fields StdFields) *log.Logger {
+	zapLogger := s.zapUnNamedMakerFunc()
+	zapAnyFields := make([]zap.Field, len(fields))
+
+	var i int
+
+	for fieldName, fieldValue := range fields {
+		zapAnyFields[i] = zap.Any(fieldName, fieldValue)
+	}
+
+	return zap.NewStdLog(zapLogger.With(zapAnyFields...))
 }
 
 func (s *stdLogFabric) NamedWithFields(name string, fields StdFields) *log.Logger {
@@ -56,7 +70,7 @@ func (s *stdLogFabric) NamedWithFields(name string, fields StdFields) *log.Logge
 		zapAnyFields[i] = zap.Any(fieldName, fieldValue)
 	}
 
-	l := s.zapMakerFunc(name).With(zapAnyFields...)
+	l := s.zapNamedMakerFunc(name).With(zapAnyFields...)
 
 	return zap.NewStdLog(l)
 }
@@ -81,7 +95,10 @@ func (s *singleNameStdLogFabric) WithFields(fields StdFields) *log.Logger {
 
 func NewStdLogMaker(zapLogger *zap.Logger) *stdLogFabric {
 	return &stdLogFabric{
-		zapMakerFunc: zapLogger.Named,
+		zapNamedMakerFunc: zapLogger.Named,
+		zapUnNamedMakerFunc: func() *zap.Logger {
+			return zapLogger.With()
+		},
 	}
 }
 

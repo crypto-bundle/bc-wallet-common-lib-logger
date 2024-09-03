@@ -57,3 +57,7 @@ type configManager interface {
 	GetSkipBuildInfo() bool
 	IsStacktraceEnabled() bool
 }
+
+type LogEntryService interface {
+	With()
+}
