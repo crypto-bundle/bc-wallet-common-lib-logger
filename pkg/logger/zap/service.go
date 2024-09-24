@@ -55,11 +55,7 @@ func (s *Service) newLoggerEntry(named string, fields ...any) *zap.Logger {
 }
 
 func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger {
-	var cores = []zapcore.Core{
-		s.defaultLogger.Core(),
-	}
-
-	l := zap.New(zapcore.NewTee(cores...))
+	l := zap.New(zapcore.NewTee(s.cores...))
 
 	l = l.Named(named).With(fields...)
 
