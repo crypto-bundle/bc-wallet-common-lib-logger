@@ -30,14 +30,9 @@
  *
  */
 
-package logger
+package zap
 
 import (
-	"log"
-	"log/slog"
-
-	stdLogWrapper "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger/log"
-
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -49,45 +44,14 @@ type Service struct {
 	cores         []zapcore.Core
 }
 
-func (s *Service) NewStdLogger(named string) *log.Logger {
-	zapLogger := s.newLoggerEntry(named)
-
-	logMaker := stdLogWrapper.NewStdLogMaker(zapLogger)
+func (s *Service) NewLoggerEntry(named string, fields ...any) *zap.Logger {
+	return s.newLoggerEntry(named, fields...)
 }
 
-func (s *Service) NewSlogEntry(named string) *slog.Logger {
-	return s.newLoggerEntry(named)
-}
+func (s *Service) newLoggerEntry(named string, fields ...any) *zap.Logger {
+	l := zap.New(zapcore.NewTee(s.cores[:]...))
 
-func (s *Service) NewLoggerEntry(named string) *zap.Logger {
-	return s.newLoggerEntry(named)
-}
-
-func (s *Service) newLoggerEntry(named string) *zap.Logger {
-	var cores = []zapcore.Core{
-		s.defaultLogger.Core(),
-	}
-
-	l := zap.New(zapcore.NewTee(cores...))
-	zap.ReplaceGlobals(l)
-
-	l = l.Named(named).With(zap.String(HostnameFieldTag, s.cfg.GetHostName()),
-		zap.String(EnvironmentNameTag, s.cfg.GetEnvironmentName()),
-		zap.String(StageNameTag, s.cfg.GetStageName()),
-		zap.Int(ApplicationPID, s.cfg.GetApplicationPID()))
-
-	isDevOrLocal := s.cfg.IsDev() || s.cfg.IsLocal()
-	buildInfoEnabled := isDevOrLocal && s.cfg.GetSkipBuildInfo()
-	if buildInfoEnabled {
-		l = l.With(zap.String(SVCReleaseTag, s.cfg.GetReleaseTag()),
-			zap.String(SVCCommitShortID, s.cfg.GetShortCommitID()),
-			zap.String(SVCCommitID, s.cfg.GetCommitID()),
-			zap.Uint64(BuildNumberTag, s.cfg.GetBuildNumber()),
-			zap.Time(BuildDateTag, s.cfg.GetBuildDate()),
-			zap.Uint64(BuildDateTimestampTag, uint64(s.cfg.GetBuildDateTS())))
-	}
-
-	return l
+	return l.Named(named).With(MakeZapFields(fields...)...)
 }
 
 func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger {
@@ -96,7 +60,6 @@ func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) *z
 	}
 
 	l := zap.New(zapcore.NewTee(cores...))
-	zap.ReplaceGlobals(l)
 
 	l = l.Named(named).With(fields...)
 
@@ -126,6 +89,8 @@ func NewService(cfg configManager) (*Service, error) {
 	}
 
 	cores[0] = defaultLogger.Core()
+
+	zap.ReplaceGlobals(defaultLogger)
 
 	return &Service{
 		cfg:           cfg,

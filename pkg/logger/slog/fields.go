@@ -80,7 +80,7 @@ func getFieldMapperFunc(kind slog.Kind) func(attr slog.Attr) zap.Field {
 	}
 }
 
-func ExtractFields(record slog.Record) []zap.Field {
+func extractFields(record slog.Record) []zap.Field {
 	zapFields := make([]zap.Field, record.NumAttrs())
 
 	index := 0
@@ -97,7 +97,7 @@ func ExtractFields(record slog.Record) []zap.Field {
 		}
 
 		if kind == slog.KindGroup {
-			groupFields := MapFields(attr.Value.Group())
+			groupFields := mapFields(attr.Value.Group())
 
 			zapFields = append(zapFields, make([]zap.Field, len(groupFields)-1)...)
 			copy(zapFields[index:], groupFields)
@@ -111,7 +111,7 @@ func ExtractFields(record slog.Record) []zap.Field {
 	return zapFields
 }
 
-func MapFields(attrs []slog.Attr) []zap.Field {
+func mapFields(attrs []slog.Attr) []zap.Field {
 	zapFields := make([]zap.Field, len(attrs))
 	index := 0
 
@@ -128,7 +128,7 @@ func MapFields(attrs []slog.Attr) []zap.Field {
 		}
 
 		if kind == slog.KindGroup {
-			groupFields := MapFields(attr.Value.Group())
+			groupFields := mapFields(attr.Value.Group())
 
 			zapFields = append(zapFields, make([]zap.Field, len(groupFields)-1)...)
 			copy(zapFields[index:], groupFields)

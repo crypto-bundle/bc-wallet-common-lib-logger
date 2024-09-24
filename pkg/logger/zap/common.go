@@ -30,36 +30,19 @@
  *
  */
 
-package slog
+package zap
 
-import (
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"log/slog"
-)
+const BadLoggerKeyName = "!BADKEY"
 
-var LogLevels = map[slog.Level]zapcore.Level{
-	slog.LevelDebug: zap.DebugLevel,
-	slog.LevelInfo:  zap.InfoLevel,
-	slog.LevelWarn:  zap.WarnLevel,
-	slog.LevelError: zap.ErrorLevel,
-}
+type configManager interface {
+	IsProd() bool
+	IsStage() bool
+	IsTest() bool
+	IsDev() bool
+	IsDebug() bool
+	IsLocal() bool
 
-func extractLoggerLevel(lvl slog.Level) zapcore.Level {
-	switch lvl {
-	case slog.LevelDebug:
-		return zap.DebugLevel
-
-	case slog.LevelInfo:
-		return zap.InfoLevel
-
-	case slog.LevelWarn:
-		return zap.WarnLevel
-
-	case slog.LevelError:
-		return zap.ErrorLevel
-
-	default:
-		return zap.InfoLevel
-	}
+	GetMinimalLogLevel() string
+	GetSkipBuildInfo() bool
+	IsStacktraceEnabled() bool
 }

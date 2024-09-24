@@ -30,36 +30,72 @@
  *
  */
 
-package slog
+package zap
 
-import (
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"log/slog"
-)
+import "testing"
 
-var LogLevels = map[slog.Level]zapcore.Level{
-	slog.LevelDebug: zap.DebugLevel,
-	slog.LevelInfo:  zap.InfoLevel,
-	slog.LevelWarn:  zap.WarnLevel,
-	slog.LevelError: zap.ErrorLevel,
+func TestMakeZapFields(t *testing.T) {
+	t.Run(" event filed count first case", func(t *testing.T) {
+		testData := []any{
+			"test_field_1", "test_value_1",
+			"test_field_2", "test_value_2",
+			"test_field_3", "test_value_3",
+		}
+
+		result := MakeZapFields(testData...)
+
+		t.Log(len(result))
+	})
+
+	t.Run(" event filed count second case", func(t *testing.T) {
+		testData := []any{
+			"test_field_1", "test_value_1",
+			"test_field_2", "test_value_2",
+			"test_field_3",
+		}
+
+		result := MakeZapFields(testData...)
+
+		t.Log(len(result))
+	})
 }
 
-func extractLoggerLevel(lvl slog.Level) zapcore.Level {
-	switch lvl {
-	case slog.LevelDebug:
-		return zap.DebugLevel
+func TestMakeFieldsForNonEven(t *testing.T) {
+	t.Run("non event filed count first case", func(t *testing.T) {
+		testData := []any{
+			"test_field_1", "test_value_1",
+			"test_field_2", "test_value_2",
+			"test_field_3",
+		}
 
-	case slog.LevelInfo:
-		return zap.InfoLevel
+		result := MakeZapFields(testData...)
 
-	case slog.LevelWarn:
-		return zap.WarnLevel
+		t.Log(len(result))
+	})
 
-	case slog.LevelError:
-		return zap.ErrorLevel
+	t.Run("non event filed count second case", func(t *testing.T) {
+		testData := []any{
+			"test_field_1", "test_value_1",
+			"test_field_2", "test_value_2",
+		}
 
-	default:
-		return zap.InfoLevel
-	}
+		result := MakeZapFields(testData...)
+
+		t.Log(len(result))
+	})
+
+	t.Run("non event filed count second case", func(t *testing.T) {
+		testData := []any{
+			"test_field_1", "test_value_1",
+			"test_field_2", "test_value_2",
+			"test_field_3", "test_value_3",
+			"test_field_4", "test_value_4",
+			"test_field_5", "test_value_5",
+		}
+
+		result := MakeZapFields(testData...)
+
+		t.Log(len(result))
+	})
+
 }

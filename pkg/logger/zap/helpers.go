@@ -30,36 +30,62 @@
  *
  */
 
-package slog
+package zap
 
-import (
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"log/slog"
-)
+import "go.uber.org/zap"
 
-var LogLevels = map[slog.Level]zapcore.Level{
-	slog.LevelDebug: zap.DebugLevel,
-	slog.LevelInfo:  zap.InfoLevel,
-	slog.LevelWarn:  zap.WarnLevel,
-	slog.LevelError: zap.ErrorLevel,
+func MakeZapFields(fields ...any) []zap.Field {
+	fieldsCount := len(fields)
+	if fieldsCount == 0 {
+		return nil
+	}
+
+	isEven := fieldsCount%2 == 0
+	if isEven {
+		return makeFieldsForEven(fieldsCount, fields...)
+	}
+
+	return makeFieldsForNonEven(fieldsCount, fields...)
 }
 
-func extractLoggerLevel(lvl slog.Level) zapcore.Level {
-	switch lvl {
-	case slog.LevelDebug:
-		return zap.DebugLevel
+func makeFieldsForEven(fieldsCount int,
+	fields ...any,
+) []zap.Field {
+	zapFields := make([]zap.Field, fieldsCount/2)
 
-	case slog.LevelInfo:
-		return zap.InfoLevel
+	for i, j := 0, 0; i != fieldsCount; i, j = i+2, j+1 {
+		fieldName, isString := fields[i].(string)
+		if !isString {
+			fieldName = BadLoggerKeyName
+		}
 
-	case slog.LevelWarn:
-		return zap.WarnLevel
-
-	case slog.LevelError:
-		return zap.ErrorLevel
-
-	default:
-		return zap.InfoLevel
+		zapFields[j] = zap.Any(fieldName, fields[i+1])
 	}
+
+	return zapFields
+}
+
+func makeFieldsForNonEven(fieldsCount int,
+	fields ...any,
+) []zap.Field {
+	zapFields := make([]zap.Field, (fieldsCount/2)+1)
+	var j int
+
+	for i := 0; i != fieldsCount; i = i + 2 {
+		if i+1 >= fieldsCount {
+			zapFields[j] = zap.Any(BadLoggerKeyName, fields[i])
+			j++
+			break
+		}
+
+		fieldName, isString := fields[i].(string)
+		if !isString {
+			fieldName = BadLoggerKeyName
+		}
+
+		zapFields[j] = zap.Any(fieldName, fields[i+1])
+		j++
+	}
+
+	return zapFields[:j]
 }

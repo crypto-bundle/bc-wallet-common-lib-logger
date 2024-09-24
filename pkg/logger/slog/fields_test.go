@@ -77,7 +77,7 @@ func TestMapFields(t *testing.T) {
 	}
 
 	for _, tCase := range testCases {
-		zapFields := MapFields(tCase.attributes)
+		zapFields := mapFields(tCase.attributes)
 		zapFieldsCount := uint(len(zapFields))
 
 		if zapFieldsCount != tCase.expectedAttrCount {
@@ -150,7 +150,7 @@ func TestExtractFields(t *testing.T) {
 		r := slog.NewRecord(time.Now(), tCase.logLevel, tCase.logMessage, 0)
 		r.AddAttrs(tCase.attributes...)
 
-		zapFields := ExtractFields(r)
+		zapFields := extractFields(r)
 		zapFieldsCount := uint(len(zapFields))
 
 		if zapFieldsCount != tCase.expectedAttrCount {

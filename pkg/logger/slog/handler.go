@@ -79,9 +79,9 @@ func (h *ZapHandler) Enabled(_ context.Context, level slog.Level) bool {
 }
 
 func (h *ZapHandler) Handle(_ context.Context, record slog.Record) error {
-	level := LogLevels[record.Level]
+	level := extractLoggerLevel(record.Level)
 
-	fields := ExtractFields(record)
+	fields := extractFields(record)
 
 	checked := h.Logger.Check(level, record.Message)
 

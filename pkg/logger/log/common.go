@@ -30,36 +30,30 @@
  *
  */
 
-package slog
+package log
 
-import (
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"log/slog"
-)
+import "time"
 
-var LogLevels = map[slog.Level]zapcore.Level{
-	slog.LevelDebug: zap.DebugLevel,
-	slog.LevelInfo:  zap.InfoLevel,
-	slog.LevelWarn:  zap.WarnLevel,
-	slog.LevelError: zap.ErrorLevel,
-}
+type configManager interface {
+	GetHostName() string
+	GetEnvironmentName() string
+	IsProd() bool
+	IsStage() bool
+	IsTest() bool
+	IsDev() bool
+	IsDebug() bool
+	IsLocal() bool
+	GetStageName() string
 
-func extractLoggerLevel(lvl slog.Level) zapcore.Level {
-	switch lvl {
-	case slog.LevelDebug:
-		return zap.DebugLevel
+	GetApplicationPID() int
+	GetReleaseTag() string
+	GetCommitID() string
+	GetShortCommitID() string
+	GetBuildNumber() uint64
+	GetBuildDateTS() int64
+	GetBuildDate() time.Time
 
-	case slog.LevelInfo:
-		return zap.InfoLevel
-
-	case slog.LevelWarn:
-		return zap.WarnLevel
-
-	case slog.LevelError:
-		return zap.ErrorLevel
-
-	default:
-		return zap.InfoLevel
-	}
+	GetMinimalLogLevel() string
+	GetSkipBuildInfo() bool
+	IsStacktraceEnabled() bool
 }
