@@ -49,7 +49,7 @@ func (s *Service) NewLoggerEntry(named string, fields ...any) *zap.Logger {
 }
 
 func (s *Service) newLoggerEntry(named string, fields ...any) *zap.Logger {
-	l := zap.New(zapcore.NewTee(s.cores[:]...))
+	l := zap.New(zapcore.NewTee(s.cores...))
 
 	return l.Named(named).With(MakeZapFields(fields...)...)
 }
