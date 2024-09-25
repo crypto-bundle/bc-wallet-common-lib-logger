@@ -1,6 +1,6 @@
 # Change Log
 
-## [v0.0.7] - 01.09.2024
+## [v0.0.7] - 25.09.2024
 ### Added
 * Added slog Logger support
     * Added slog Logger fabric method for making new instances of slog.Logger
