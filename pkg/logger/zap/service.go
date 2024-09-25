@@ -54,15 +54,15 @@ func (s *Service) NewLoggerEntry(named string, fields ...any) *zap.Logger {
 func (s *Service) newLoggerEntry(named string, fields ...any) *zap.Logger {
 	l := zap.New(zapcore.NewTee(s.cores...))
 
-	return l.Named(named).With(MakeZapFields(fields...)...)
+	return l.Named(named).With(append(s.defaultFields[:0:0],
+		MakeZapFields(fields...)...)...)
 }
 
 func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger {
 	l := zap.New(zapcore.NewTee(s.cores...))
 
-	l = l.Named(named).With(append(s.defaultFields[:], fields...)...)
-
-	return l
+	return l.Named(named).With(append(s.defaultFields[:0:0],
+		fields...)...)
 }
 
 func NewService(cfg configManager,

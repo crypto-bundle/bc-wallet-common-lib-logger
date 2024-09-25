@@ -80,7 +80,7 @@ func NewService(cfg configManager, errFmtSvc errorFormatterService) (*Service, e
 			BuildNumberTag, cfg.GetBuildNumber(),
 			BuildDateTag, cfg.GetBuildDate(),
 			BuildDateTimestampTag, uint64(cfg.GetBuildDateTS()),
-		})
+		}...)
 	}
 
 	zapLoggerEntryBuilder, err := clzap.NewService(cfg, errFmtSvc, fields...)

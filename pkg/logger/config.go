@@ -32,7 +32,7 @@
 
 package logger
 
-// LoggerConfig is config for logger service
+// LoggerConfig is config for logger service...
 type LoggerConfig struct {
 	// -------------------
 	// Application configs

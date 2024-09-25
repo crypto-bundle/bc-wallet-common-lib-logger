@@ -35,22 +35,9 @@ package slog
 import (
 	"context"
 	"log/slog"
-	"runtime"
 
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
-
-type option struct {
-	// log level (default: debug)
-	Level slog.Leveler
-
-	// optional: zap logger (default: zap.L())
-
-	// optional: see slog.HandlerOptions
-	AddSource   bool
-	ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
-}
 
 func newZapHandler(attrs []slog.Attr,
 	errFmtSvc errorFormatterService,
@@ -73,7 +60,6 @@ var _ slog.Handler = (*zapHandler)(nil)
 
 type zapHandler struct {
 	Logger *zap.Logger
-	option option
 	attrs  []slog.Attr
 	groups []string
 
@@ -81,7 +67,7 @@ type zapHandler struct {
 }
 
 func (h *zapHandler) Enabled(_ context.Context, level slog.Level) bool {
-	return level >= h.option.Level.Level()
+	return extractLoggerLevel(level) >= h.Logger.Level()
 }
 
 func (h *zapHandler) Handle(_ context.Context, record slog.Record) error {
@@ -91,32 +77,20 @@ func (h *zapHandler) Handle(_ context.Context, record slog.Record) error {
 
 	checked := h.Logger.Check(level, record.Message)
 
-	switch true {
-	case checked == nil:
-		fallthrough
-	default:
-		h.Logger.Log(level, record.Message, fields...)
-
-	case checked != nil && h.option.AddSource:
-		frame, _ := runtime.CallersFrames([]uintptr{record.PC}).Next()
-		checked.Caller = zapcore.NewEntryCaller(0, frame.File, frame.Line, true)
-		checked.Stack = "" //@TODO
-
+	if checked != nil {
 		checked.Write(fields...)
 
-	case checked != nil && !h.option.AddSource:
-		checked.Caller = zapcore.NewEntryCaller(0, "", 0, false)
-		checked.Stack = ""
-
-		checked.Write(fields...)
+		return nil
 	}
+
+	h.Logger.Log(level, record.Message, fields...)
 
 	return nil
 }
 
 func (h *zapHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return &zapHandler{
-		option: h.option,
+		Logger: h.Logger.With(mapFields(attrs)...),
 		attrs:  append(h.attrs, attrs...),
 		groups: h.groups,
 		e:      h.e,
@@ -130,7 +104,7 @@ func (h *zapHandler) WithGroup(name string) slog.Handler {
 	}
 
 	return &zapHandler{
-		option: h.option,
+		Logger: h.Logger.Named(name),
 		attrs:  h.attrs,
 		groups: append(h.groups, name),
 		e:      h.e,

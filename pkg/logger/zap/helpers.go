@@ -75,20 +75,20 @@ func makeFieldsForNonEven(fieldsCount int,
 	var sliceLengthCounter int
 	zapFields := make([]zap.Field, (fieldsCount/2)+1)
 
-	for i := 0; i != fieldsCount; i = i + 2 {
-		if i+1 >= fieldsCount {
-			zapFields[sliceLengthCounter] = zap.Any(BadLoggerKeyName, fields[i])
+	for index := 0; index != fieldsCount; index += 2 {
+		if index+1 >= fieldsCount {
+			zapFields[sliceLengthCounter] = zap.Any(BadLoggerKeyName, fields[index])
 			sliceLengthCounter++
 
 			break
 		}
 
-		fieldName, isString := fields[i].(string)
+		fieldName, isString := fields[index].(string)
 		if !isString {
 			fieldName = BadLoggerKeyName
 		}
 
-		zapFields[sliceLengthCounter] = zap.Any(fieldName, fields[i+1])
+		zapFields[sliceLengthCounter] = zap.Any(fieldName, fields[index+1])
 		sliceLengthCounter++
 	}
 

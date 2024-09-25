@@ -99,6 +99,7 @@ func extractFields(record slog.Record) []zap.Field {
 		if kind == slog.KindGroup {
 			groupFields := mapFields(attr.Value.Group())
 
+			//nolint:makezero //it's ok here
 			zapFields = append(zapFields, make([]zap.Field, len(groupFields)-1)...)
 			copy(zapFields[index:], groupFields)
 
@@ -130,6 +131,7 @@ func mapFields(attrs []slog.Attr) []zap.Field {
 		if kind == slog.KindGroup {
 			groupFields := mapFields(attr.Value.Group())
 
+			//nolint:makezero //it's ok here
 			zapFields = append(zapFields, make([]zap.Field, len(groupFields)-1)...)
 			copy(zapFields[index:], groupFields)
 

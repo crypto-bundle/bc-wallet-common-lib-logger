@@ -33,10 +33,11 @@
 package logger
 
 import (
-	"go.uber.org/zap"
 	"log"
 	"log/slog"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 type configManager interface {
