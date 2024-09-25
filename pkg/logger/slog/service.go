@@ -33,98 +33,19 @@
 package slog
 
 import (
-	"context"
 	"log/slog"
-	"runtime"
-
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
-type Option struct {
-	// log level (default: debug)
-	Level slog.Leveler
-
-	// optional: zap logger (default: zap.L())
-
-	// optional: see slog.HandlerOptions
-	AddSource   bool
-	ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
+type slogFabric struct {
+	zapLogMakerSvc zapLogEntryService
 }
 
-func NewZapHandler(attrs []slog.Attr, zapLogger *zap.Logger) slog.Handler {
-	if zapLogger == nil {
-		// should be selected lazily ?
-		zapLogger = zap.L()
-	}
-
-	return &ZapHandler{
-		Logger: zapLogger,
-		attrs:  attrs,
-		groups: []string{},
-	}
+func (s *slogFabric) NewLoggerEntry(name string, fields ...any) *slog.Logger {
+	return slog.New(newZapHandler(nil, s.zapLogMakerSvc.NewLoggerEntry(name, fields...)))
 }
 
-var _ slog.Handler = (*ZapHandler)(nil)
-
-type ZapHandler struct {
-	Logger *zap.Logger
-	option Option
-	attrs  []slog.Attr
-	groups []string
-}
-
-func (h *ZapHandler) Enabled(_ context.Context, level slog.Level) bool {
-	return level >= h.option.Level.Level()
-}
-
-func (h *ZapHandler) Handle(_ context.Context, record slog.Record) error {
-	level := extractLoggerLevel(record.Level)
-
-	fields := extractFields(record)
-
-	checked := h.Logger.Check(level, record.Message)
-
-	switch true {
-	case checked == nil:
-		fallthrough
-	default:
-		h.Logger.Log(level, record.Message, fields...)
-
-	case checked != nil && h.option.AddSource:
-		frame, _ := runtime.CallersFrames([]uintptr{record.PC}).Next()
-		checked.Caller = zapcore.NewEntryCaller(0, frame.File, frame.Line, true)
-		checked.Stack = "" //@TODO
-
-		checked.Write(fields...)
-
-	case checked != nil && !h.option.AddSource:
-		checked.Caller = zapcore.EntryCaller{}
-		checked.Stack = ""
-
-		checked.Write(fields...)
-	}
-
-	return nil
-}
-
-func (h *ZapHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return &ZapHandler{
-		option: h.option,
-		attrs:  append(h.attrs, attrs...),
-		groups: h.groups,
-	}
-}
-
-func (h *ZapHandler) WithGroup(name string) slog.Handler {
-	// https://cs.opensource.google/go/x/exp/+/46b07846:slog/handler.go;l=247
-	if name == "" {
-		return h
-	}
-
-	return &ZapHandler{
-		option: h.option,
-		attrs:  h.attrs,
-		groups: append(h.groups, name),
+func NewSLogMaker(zapLogMakerSvc zapLogEntryService) *slogFabric {
+	return &slogFabric{
+		zapLogMakerSvc: zapLogMakerSvc,
 	}
 }

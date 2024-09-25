@@ -38,13 +38,6 @@ import (
 	"log/slog"
 )
 
-var LogLevels = map[slog.Level]zapcore.Level{
-	slog.LevelDebug: zap.DebugLevel,
-	slog.LevelInfo:  zap.InfoLevel,
-	slog.LevelWarn:  zap.WarnLevel,
-	slog.LevelError: zap.ErrorLevel,
-}
-
 func extractLoggerLevel(lvl slog.Level) zapcore.Level {
 	switch lvl {
 	case slog.LevelDebug:

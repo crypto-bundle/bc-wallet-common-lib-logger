@@ -42,6 +42,8 @@ type Service struct {
 
 	defaultLogger *zap.Logger
 	cores         []zapcore.Core
+
+	defaultFields []zap.Field
 }
 
 func (s *Service) NewLoggerEntry(named string, fields ...any) *zap.Logger {
@@ -57,12 +59,12 @@ func (s *Service) newLoggerEntry(named string, fields ...any) *zap.Logger {
 func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger {
 	l := zap.New(zapcore.NewTee(s.cores...))
 
-	l = l.Named(named).With(fields...)
+	l = l.Named(named).With(append(s.defaultFields[:], fields...)...)
 
 	return l
 }
 
-func NewService(cfg configManager) (*Service, error) {
+func NewService(cfg configManager, defaultFields ...any) (*Service, error) {
 	cores := make([]zapcore.Core, 1)
 
 	logsLevel := new(zapcore.Level)
@@ -92,5 +94,6 @@ func NewService(cfg configManager) (*Service, error) {
 		cfg:           cfg,
 		defaultLogger: defaultLogger,
 		cores:         cores,
+		defaultFields: makeZapFields(defaultFields...),
 	}, nil
 }

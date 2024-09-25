@@ -32,7 +32,10 @@
 
 package slog
 
-import "time"
+import (
+	"go.uber.org/zap"
+	"time"
+)
 
 type configManager interface {
 	GetHostName() string
@@ -56,4 +59,9 @@ type configManager interface {
 	GetMinimalLogLevel() string
 	GetSkipBuildInfo() bool
 	IsStacktraceEnabled() bool
+}
+
+type zapLogEntryService interface {
+	NewLoggerEntry(named string, fields ...any) *zap.Logger
+	NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger
 }

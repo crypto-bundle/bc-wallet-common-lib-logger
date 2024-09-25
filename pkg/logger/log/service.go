@@ -38,73 +38,16 @@ import (
 	"go.uber.org/zap"
 )
 
-type StdFields map[string]interface{}
-
 type stdLogFabric struct {
-	zapNamedMakerFunc   func(named string) *zap.Logger
-	zapUnNamedMakerFunc func() *zap.Logger
+	zapLogMakerSvc zapLogEntryService
 }
 
-func (s *stdLogFabric) GetLogger() *log.Logger {
-	return zap.NewStdLog(s.zapUnNamedMakerFunc())
+func (s *stdLogFabric) NewLoggerEntry(name string, fields ...any) *log.Logger {
+	return zap.NewStdLog(s.zapLogMakerSvc.NewLoggerEntry(name, fields...))
 }
 
-func (s *stdLogFabric) WithFields(fields StdFields) *log.Logger {
-	zapLogger := s.zapUnNamedMakerFunc()
-	zapAnyFields := make([]zap.Field, len(fields))
-
-	var i int
-
-	for fieldName, fieldValue := range fields {
-		zapAnyFields[i] = zap.Any(fieldName, fieldValue)
-	}
-
-	return zap.NewStdLog(zapLogger.With(zapAnyFields...))
-}
-
-func (s *stdLogFabric) NamedWithFields(name string, fields StdFields) *log.Logger {
-	zapAnyFields := make([]zap.Field, len(fields))
-	var i int
-
-	for fieldName, fieldValue := range fields {
-		zapAnyFields[i] = zap.Any(fieldName, fieldValue)
-	}
-
-	l := s.zapNamedMakerFunc(name).With(zapAnyFields...)
-
-	return zap.NewStdLog(l)
-}
-
-type singleNameStdLogFabric struct {
-	zapMakerFunc func(named string) *zap.Logger
-	name         string
-}
-
-func (s *singleNameStdLogFabric) WithFields(fields StdFields) *log.Logger {
-	zapAnyFields := make([]zap.Field, len(fields))
-	var i int
-
-	for fieldName, fieldValue := range fields {
-		zapAnyFields[i] = zap.Any(fieldName, fieldValue)
-	}
-
-	l := s.zapMakerFunc(s.name).With(zapAnyFields...)
-
-	return zap.NewStdLog(l)
-}
-
-func NewStdLogMaker(zapLogger *zap.Logger) *stdLogFabric {
+func NewStdLogMaker(zapLogMakerSvc zapLogEntryService) *stdLogFabric {
 	return &stdLogFabric{
-		zapNamedMakerFunc: zapLogger.Named,
-		zapUnNamedMakerFunc: func() *zap.Logger {
-			return zapLogger.With()
-		},
-	}
-}
-
-func NewNamedStdLogMaker(zapLogger *zap.Logger, name string) *singleNameStdLogFabric {
-	return &singleNameStdLogFabric{
-		zapMakerFunc: zapLogger.Named,
-		name:         name,
+		zapLogMakerSvc: zapLogMakerSvc,
 	}
 }

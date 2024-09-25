@@ -35,6 +35,10 @@ package zap
 import "go.uber.org/zap"
 
 func MakeZapFields(fields ...any) []zap.Field {
+	return makeZapFields(fields...)
+}
+
+func makeZapFields(fields ...any) []zap.Field {
 	fieldsCount := len(fields)
 	if fieldsCount == 0 {
 		return nil
