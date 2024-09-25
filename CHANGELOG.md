@@ -1,5 +1,11 @@
 # Change Log
 
+## [v0.0.8] - 26.09.2024
+### Added
+* Added golangci linter settings
+### Changed
+* Cleaned up code by linter rules
+
 ## [v0.0.7] - 25.09.2024
 ### Added
 * Added slog Logger support

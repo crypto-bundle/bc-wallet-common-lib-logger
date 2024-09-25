@@ -72,13 +72,14 @@ func makeFieldsForEven(fieldsCount int,
 func makeFieldsForNonEven(fieldsCount int,
 	fields ...any,
 ) []zap.Field {
+	var sliceLengthCounter int
 	zapFields := make([]zap.Field, (fieldsCount/2)+1)
-	var j int
 
 	for i := 0; i != fieldsCount; i = i + 2 {
 		if i+1 >= fieldsCount {
-			zapFields[j] = zap.Any(BadLoggerKeyName, fields[i])
-			j++
+			zapFields[sliceLengthCounter] = zap.Any(BadLoggerKeyName, fields[i])
+			sliceLengthCounter++
+
 			break
 		}
 
@@ -87,9 +88,9 @@ func makeFieldsForNonEven(fieldsCount int,
 			fieldName = BadLoggerKeyName
 		}
 
-		zapFields[j] = zap.Any(fieldName, fields[i+1])
-		j++
+		zapFields[sliceLengthCounter] = zap.Any(fieldName, fields[i+1])
+		sliceLengthCounter++
 	}
 
-	return zapFields[:j]
+	return zapFields[:sliceLengthCounter]
 }

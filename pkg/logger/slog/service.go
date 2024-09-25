@@ -38,14 +38,18 @@ import (
 
 type slogFabric struct {
 	zapLogMakerSvc zapLogEntryService
+	e              errorFormatterService
 }
 
-func (s *slogFabric) NewLoggerEntry(name string, fields ...any) *slog.Logger {
-	return slog.New(newZapHandler(nil, s.zapLogMakerSvc.NewLoggerEntry(name, fields...)))
+func (s *slogFabric) NewLoggerEntry(name string,
+	fields ...any,
+) *slog.Logger {
+	return slog.New(newZapHandler(nil, s.e, s.zapLogMakerSvc.NewLoggerEntry(name, fields...)))
 }
 
-func NewSLogMaker(zapLogMakerSvc zapLogEntryService) *slogFabric {
+func NewSLogMaker(zapLogMakerSvc zapLogEntryService, errFmtSvc errorFormatterService) *slogFabric {
 	return &slogFabric{
 		zapLogMakerSvc: zapLogMakerSvc,
+		e:              errFmtSvc,
 	}
 }

@@ -52,7 +52,10 @@ type option struct {
 	ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
 }
 
-func newZapHandler(attrs []slog.Attr, zapLogger *zap.Logger) slog.Handler {
+func newZapHandler(attrs []slog.Attr,
+	errFmtSvc errorFormatterService,
+	zapLogger *zap.Logger,
+) slog.Handler {
 	if zapLogger == nil {
 		// should be selected lazily ?
 		zapLogger = zap.L()
@@ -62,6 +65,7 @@ func newZapHandler(attrs []slog.Attr, zapLogger *zap.Logger) slog.Handler {
 		Logger: zapLogger,
 		attrs:  attrs,
 		groups: []string{},
+		e:      errFmtSvc,
 	}
 }
 
@@ -72,6 +76,8 @@ type zapHandler struct {
 	option option
 	attrs  []slog.Attr
 	groups []string
+
+	e errorFormatterService
 }
 
 func (h *zapHandler) Enabled(_ context.Context, level slog.Level) bool {
@@ -99,7 +105,7 @@ func (h *zapHandler) Handle(_ context.Context, record slog.Record) error {
 		checked.Write(fields...)
 
 	case checked != nil && !h.option.AddSource:
-		checked.Caller = zapcore.EntryCaller{}
+		checked.Caller = zapcore.NewEntryCaller(0, "", 0, false)
 		checked.Stack = ""
 
 		checked.Write(fields...)
@@ -113,6 +119,7 @@ func (h *zapHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 		option: h.option,
 		attrs:  append(h.attrs, attrs...),
 		groups: h.groups,
+		e:      h.e,
 	}
 }
 
@@ -126,5 +133,6 @@ func (h *zapHandler) WithGroup(name string) slog.Handler {
 		option: h.option,
 		attrs:  h.attrs,
 		groups: append(h.groups, name),
+		e:      h.e,
 	}
 }

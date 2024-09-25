@@ -63,7 +63,7 @@ func (s *Service) NewZapLoggerEntry(named string, fields ...any) *zap.Logger {
 	return s.zapLogEntryBuilderSvc.NewLoggerEntry(named, fields...)
 }
 
-func NewService(cfg configManager) (*Service, error) {
+func NewService(cfg configManager, errFmtSvc errorFormatterService) (*Service, error) {
 	var fields = []any{
 		HostnameFieldTag, cfg.GetHostName(),
 		StageNameTag, cfg.GetStageName(),
@@ -72,8 +72,7 @@ func NewService(cfg configManager) (*Service, error) {
 	}
 
 	isDevOrLocal := cfg.IsDev() || cfg.IsLocal()
-	buildInfoEnabled := isDevOrLocal && cfg.GetSkipBuildInfo()
-	if buildInfoEnabled {
+	if isDevOrLocal && cfg.GetSkipBuildInfo() {
 		fields = append(fields, []any{
 			SVCReleaseTag, cfg.GetReleaseTag(),
 			SVCCommitShortID, cfg.GetShortCommitID(),
@@ -84,12 +83,12 @@ func NewService(cfg configManager) (*Service, error) {
 		})
 	}
 
-	zapLoggerEntryBuilder, err := clzap.NewService(cfg, fields...)
+	zapLoggerEntryBuilder, err := clzap.NewService(cfg, errFmtSvc, fields...)
 	if err != nil {
-		return nil, err
+		return nil, errFmtSvc.ErrorOnly(err)
 	}
 
-	slogBuilderSvc := clslog.NewSLogMaker(zapLoggerEntryBuilder)
+	slogBuilderSvc := clslog.NewSLogMaker(zapLoggerEntryBuilder, errFmtSvc)
 	stdLogBuilderSvc := cllog.NewStdLogMaker(zapLoggerEntryBuilder)
 
 	return &Service{

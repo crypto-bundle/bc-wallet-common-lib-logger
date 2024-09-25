@@ -34,31 +34,13 @@ package slog
 
 import (
 	"go.uber.org/zap"
-	"time"
 )
 
-type configManager interface {
-	GetHostName() string
-	GetEnvironmentName() string
-	IsProd() bool
-	IsStage() bool
-	IsTest() bool
-	IsDev() bool
-	IsDebug() bool
-	IsLocal() bool
-	GetStageName() string
-
-	GetApplicationPID() int
-	GetReleaseTag() string
-	GetCommitID() string
-	GetShortCommitID() string
-	GetBuildNumber() uint64
-	GetBuildDateTS() int64
-	GetBuildDate() time.Time
-
-	GetMinimalLogLevel() string
-	GetSkipBuildInfo() bool
-	IsStacktraceEnabled() bool
+type errorFormatterService interface {
+	ErrorOnly(err error, details ...string) error
+	Errorf(err error, format string, args ...interface{}) error
+	NewError(details ...string) error
+	NewErrorf(format string, args ...interface{}) error
 }
 
 type zapLogEntryService interface {
