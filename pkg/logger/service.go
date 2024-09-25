@@ -51,15 +51,15 @@ type Service struct {
 	slogLogEntryBuilderSvc slogLogEntryService
 }
 
-func (s *Service) NewStdLogger(named string, fields ...any) *log.Logger {
+func (s *Service) NewStdLoggerEntry(named string, fields ...any) *log.Logger {
 	return s.stdLogEntryBuilderSvc.NewLoggerEntry(named, fields...)
 }
 
-func (s *Service) NewSlogEntry(named string, fields ...any) *slog.Logger {
+func (s *Service) NewSlogLoggerEntry(named string, fields ...any) *slog.Logger {
 	return s.slogLogEntryBuilderSvc.NewLoggerEntry(named, fields...)
 }
 
-func (s *Service) NewLoggerEntry(named string, fields ...any) *zap.Logger {
+func (s *Service) NewZapLoggerEntry(named string, fields ...any) *zap.Logger {
 	return s.zapLogEntryBuilderSvc.NewLoggerEntry(named, fields...)
 }
 

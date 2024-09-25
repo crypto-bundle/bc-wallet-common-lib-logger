@@ -2,6 +2,14 @@
 
 ## [v0.0.7] - 01.09.2024
 ### Added
+* Added slog Logger support
+    * Added slog Logger fabric method for making new instances of slog.Logger
+    * Added slog Logger sub-package
+### Changed
+* Refactored std log package
+* Refactored and moved zap.Logger to separated package
+* Refactored root bc-wallet-common-lib-logger package
+* Changed example section in README.md file 
 
 ## [v0.0.5 - v0.0.6] - 27.07.2024
 ### Added 

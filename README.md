@@ -29,9 +29,13 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
+	"os"
 
 	commonConfig "github.com/crypto-bundle/bc-wallet-common-lib-config/pkg/config"
 	commonLogger "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger"
+
+	"go.uber.org/zap"
 )
 
 type applicationConfig struct {
@@ -57,67 +61,26 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error(), err)
 	}
-	stdLoggerFabric := loggerSvc.NewStdLogMaker()
-	zapLoggerEntry := loggerSvc.NewLoggerEntry("main")
-	stdLoggerEntry := stdLoggerFabric.WithFields("stdLoggerName", map[string]interface{}{
+
+	stdLoggerEntry := loggerSvc.NewStdLoggerEntry("stdLoggerName", []any{
+		"test_field":  "test_value",
+		"test_field1": "test_value2",
+	})
+	slogLoggerEntry := loggerSvc.NewSlogLoggerEntry("slogLoggerName", []any{
+		"test_field":  "test_value",
+		"test_field1": "test_value2",
+	})
+	zapLoggerEntry := loggerSvc.NewZapLoggerEntry("main", []any{
 		"test_field":  "test_value",
 		"test_field1": "test_value2",
 	})
 
-	stdLoggerEntry.Print("std logger info")
 	// usage
-	zapLoggerEntry.Info("zap logger info")
-}
-
-}
-```
-
-```go
-package main
-
-import (
-	"context"
-	"log"
-
-	commonConfig "github.com/crypto-bundle/bc-wallet-common-lib-config/pkg/config"
-	commonLogger "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger"
-)
-
-type applicationConfig struct {
-	*commonConfig.BaseConfig
-	*commonLogger.LoggerConfig
-}
-
-func main() {
-	var err error
-	ctx, _ := context.WithCancel(context.Background())
-
-	appCfg := &applicationConfig{}
-
-	baseCfgPreparerSvc := commonConfig.NewConfigManager()
-
-	baseCfg := commonConfig.NewBaseConfig("application_name")
-	err = baseCfgPreparerSvc.PrepareTo(baseCfg).Do(ctx)
-	if err != nil {
-		log.Fatal(err.Error(), err)
-	}
-
-	loggerSvc, err := commonLogger.NewService(appCfg)
-	if err != nil {
-		log.Fatal(err.Error(), err)
-	}
-	stdLoggerFabric := loggerSvc.NewNamedStdLogMaker("example_app")
-	zapLoggerEntry := loggerSvc.NewLoggerEntry("main")
-	stdLoggerEntry := stdLoggerFabric.WithFields(commonLogger.StdFields{
-		"test_field":  "test_value",
-		"test_field1": "test_value2",
-	})
-
 	stdLoggerEntry.Print("std logger info")
-	// usage
-	zapLoggerEntry.Info("zap logger info")
-}
+	slogLoggerEntry.Info("msg", slog.String("key", "value"))
+	zapLoggerEntry.Info("zap logger msg", zap.String("key", "value"))
 
+	os.Exit(0)
 }
 ```
 
