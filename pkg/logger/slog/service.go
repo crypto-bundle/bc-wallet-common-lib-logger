@@ -30,48 +30,22 @@
  *
  */
 
-package logger
+package slog
 
 import (
-	"go.uber.org/zap"
-	"log"
 	"log/slog"
-	"time"
 )
 
-type configManager interface {
-	GetHostName() string
-	GetEnvironmentName() string
-	IsProd() bool
-	IsStage() bool
-	IsTest() bool
-	IsDev() bool
-	IsDebug() bool
-	IsLocal() bool
-	GetStageName() string
-
-	GetApplicationPID() int
-	GetReleaseTag() string
-	GetCommitID() string
-	GetShortCommitID() string
-	GetBuildNumber() uint64
-	GetBuildDateTS() int64
-	GetBuildDate() time.Time
-
-	GetMinimalLogLevel() string
-	GetSkipBuildInfo() bool
-	IsStacktraceEnabled() bool
+type slogFabric struct {
+	zapLogMakerSvc zapLogEntryService
 }
 
-type zapLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *zap.Logger
-	NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger
+func (s *slogFabric) NewLoggerEntry(name string, fields ...any) *slog.Logger {
+	return slog.New(newZapHandler(nil, s.zapLogMakerSvc.NewLoggerEntry(name, fields...)))
 }
 
-type stdLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *log.Logger
-}
-
-type slogLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *slog.Logger
+func NewSLogMaker(zapLogMakerSvc zapLogEntryService) *slogFabric {
+	return &slogFabric{
+		zapLogMakerSvc: zapLogMakerSvc,
+	}
 }

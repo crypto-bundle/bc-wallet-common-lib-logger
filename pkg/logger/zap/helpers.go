@@ -30,48 +30,66 @@
  *
  */
 
-package logger
+package zap
 
-import (
-	"go.uber.org/zap"
-	"log"
-	"log/slog"
-	"time"
-)
+import "go.uber.org/zap"
 
-type configManager interface {
-	GetHostName() string
-	GetEnvironmentName() string
-	IsProd() bool
-	IsStage() bool
-	IsTest() bool
-	IsDev() bool
-	IsDebug() bool
-	IsLocal() bool
-	GetStageName() string
-
-	GetApplicationPID() int
-	GetReleaseTag() string
-	GetCommitID() string
-	GetShortCommitID() string
-	GetBuildNumber() uint64
-	GetBuildDateTS() int64
-	GetBuildDate() time.Time
-
-	GetMinimalLogLevel() string
-	GetSkipBuildInfo() bool
-	IsStacktraceEnabled() bool
+func MakeZapFields(fields ...any) []zap.Field {
+	return makeZapFields(fields...)
 }
 
-type zapLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *zap.Logger
-	NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger
+func makeZapFields(fields ...any) []zap.Field {
+	fieldsCount := len(fields)
+	if fieldsCount == 0 {
+		return nil
+	}
+
+	isEven := fieldsCount%2 == 0
+	if isEven {
+		return makeFieldsForEven(fieldsCount, fields...)
+	}
+
+	return makeFieldsForNonEven(fieldsCount, fields...)
 }
 
-type stdLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *log.Logger
+func makeFieldsForEven(fieldsCount int,
+	fields ...any,
+) []zap.Field {
+	zapFields := make([]zap.Field, fieldsCount/2)
+
+	for i, j := 0, 0; i != fieldsCount; i, j = i+2, j+1 {
+		fieldName, isString := fields[i].(string)
+		if !isString {
+			fieldName = BadLoggerKeyName
+		}
+
+		zapFields[j] = zap.Any(fieldName, fields[i+1])
+	}
+
+	return zapFields
 }
 
-type slogLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *slog.Logger
+func makeFieldsForNonEven(fieldsCount int,
+	fields ...any,
+) []zap.Field {
+	zapFields := make([]zap.Field, (fieldsCount/2)+1)
+	var j int
+
+	for i := 0; i != fieldsCount; i = i + 2 {
+		if i+1 >= fieldsCount {
+			zapFields[j] = zap.Any(BadLoggerKeyName, fields[i])
+			j++
+			break
+		}
+
+		fieldName, isString := fields[i].(string)
+		if !isString {
+			fieldName = BadLoggerKeyName
+		}
+
+		zapFields[j] = zap.Any(fieldName, fields[i+1])
+		j++
+	}
+
+	return zapFields[:j]
 }

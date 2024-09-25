@@ -33,101 +33,70 @@
 package logger
 
 import (
+	"log"
+	"log/slog"
+
+	cllog "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger/log"
+	clslog "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger/slog"
+	clzap "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger/zap"
+
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 type Service struct {
 	cfg configManager
 
-	defaultLogger *zap.Logger
-	cores         []zapcore.Core
+	zapLogEntryBuilderSvc  zapLogEntryService
+	stdLogEntryBuilderSvc  stdLogEntryService
+	slogLogEntryBuilderSvc slogLogEntryService
 }
 
-func (s *Service) NewLoggerEntry(named string) *zap.Logger {
-	return s.newLoggerEntry(named)
+func (s *Service) NewStdLoggerEntry(named string, fields ...any) *log.Logger {
+	return s.stdLogEntryBuilderSvc.NewLoggerEntry(named, fields...)
 }
 
-func (s *Service) newLoggerEntry(named string) *zap.Logger {
-	var cores = []zapcore.Core{
-		s.defaultLogger.Core(),
-	}
-
-	l := zap.New(zapcore.NewTee(cores...))
-	zap.ReplaceGlobals(l)
-
-	l = l.Named(named).With(zap.String(HostnameFieldTag, s.cfg.GetHostName()),
-		zap.String(EnvironmentNameTag, s.cfg.GetEnvironmentName()),
-		zap.String(StageNameTag, s.cfg.GetStageName()),
-		zap.Int(ApplicationPID, s.cfg.GetApplicationPID()))
-
-	isDevOrLocal := s.cfg.IsDev() || s.cfg.IsLocal()
-	buildInfoEnabled := isDevOrLocal && s.cfg.GetSkipBuildInfo()
-	if buildInfoEnabled {
-		l = l.With(zap.String(SVCReleaseTag, s.cfg.GetReleaseTag()),
-			zap.String(SVCCommitShortID, s.cfg.GetShortCommitID()),
-			zap.String(SVCCommitID, s.cfg.GetCommitID()),
-			zap.Uint64(BuildNumberTag, s.cfg.GetBuildNumber()),
-			zap.Time(BuildDateTag, s.cfg.GetBuildDate()),
-			zap.Uint64(BuildDateTimestampTag, uint64(s.cfg.GetBuildDateTS())))
-	}
-
-	return l
+func (s *Service) NewSlogLoggerEntry(named string, fields ...any) *slog.Logger {
+	return s.slogLogEntryBuilderSvc.NewLoggerEntry(named, fields...)
 }
 
-func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger {
-	var cores = []zapcore.Core{
-		s.defaultLogger.Core(),
-	}
-
-	l := zap.New(zapcore.NewTee(cores...))
-	zap.ReplaceGlobals(l)
-
-	l = l.Named(named).With(fields...)
-
-	return l
-}
-
-func (s *Service) NewStdLogMaker() *stdLogFabric {
-	return &stdLogFabric{
-		zapMakerFunc: s.newLoggerEntry,
-	}
-}
-
-func (s *Service) NewNamedStdLogMaker(name string) *singleNameStdLogFabric {
-	return &singleNameStdLogFabric{
-		zapMakerFunc: s.newLoggerEntry,
-		name:         name,
-	}
+func (s *Service) NewZapLoggerEntry(named string, fields ...any) *zap.Logger {
+	return s.zapLogEntryBuilderSvc.NewLoggerEntry(named, fields...)
 }
 
 func NewService(cfg configManager) (*Service, error) {
-	cores := make([]zapcore.Core, 1)
+	var fields = []any{
+		HostnameFieldTag, cfg.GetHostName(),
+		StageNameTag, cfg.GetStageName(),
+		ApplicationPID, cfg.GetApplicationPID(),
+		EnvironmentNameTag, cfg.GetEnvironmentName(),
+	}
 
-	logsLevel := new(zapcore.Level)
-	err := logsLevel.Set(cfg.GetMinimalLogLevel())
+	isDevOrLocal := cfg.IsDev() || cfg.IsLocal()
+	buildInfoEnabled := isDevOrLocal && cfg.GetSkipBuildInfo()
+	if buildInfoEnabled {
+		fields = append(fields, []any{
+			SVCReleaseTag, cfg.GetReleaseTag(),
+			SVCCommitShortID, cfg.GetShortCommitID(),
+			SVCCommitID, cfg.GetCommitID(),
+			BuildNumberTag, cfg.GetBuildNumber(),
+			BuildDateTag, cfg.GetBuildDate(),
+			BuildDateTimestampTag, uint64(cfg.GetBuildDateTS()),
+		})
+	}
+
+	zapLoggerEntryBuilder, err := clzap.NewService(cfg, fields...)
 	if err != nil {
 		return nil, err
 	}
 
-	lCfg := zap.NewProductionConfig()
-	lCfg.Level = zap.NewAtomicLevelAt(*logsLevel)
-	lCfg.DisableStacktrace = !cfg.IsStacktraceEnabled() // We use errs.ZapStack to get stacktrace
-	lCfg.OutputPaths = []string{"stdout"}
-	if cfg.IsDebug() {
-		lCfg.Level.SetLevel(zap.DebugLevel)
-	}
-
-	defaultLogger, err := lCfg.Build()
-	if err != nil {
-		return nil, err
-	}
-
-	cores[0] = defaultLogger.Core()
+	slogBuilderSvc := clslog.NewSLogMaker(zapLoggerEntryBuilder)
+	stdLogBuilderSvc := cllog.NewStdLogMaker(zapLoggerEntryBuilder)
 
 	return &Service{
-		cfg:           cfg,
-		defaultLogger: defaultLogger,
-		cores:         cores,
+		cfg: cfg,
+
+		zapLogEntryBuilderSvc:  zapLoggerEntryBuilder,
+		stdLogEntryBuilderSvc:  stdLogBuilderSvc,
+		slogLogEntryBuilderSvc: slogBuilderSvc,
 	}, nil
 }

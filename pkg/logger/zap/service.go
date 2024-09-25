@@ -30,48 +30,70 @@
  *
  */
 
-package logger
+package zap
 
 import (
 	"go.uber.org/zap"
-	"log"
-	"log/slog"
-	"time"
+	"go.uber.org/zap/zapcore"
 )
 
-type configManager interface {
-	GetHostName() string
-	GetEnvironmentName() string
-	IsProd() bool
-	IsStage() bool
-	IsTest() bool
-	IsDev() bool
-	IsDebug() bool
-	IsLocal() bool
-	GetStageName() string
+type Service struct {
+	cfg configManager
 
-	GetApplicationPID() int
-	GetReleaseTag() string
-	GetCommitID() string
-	GetShortCommitID() string
-	GetBuildNumber() uint64
-	GetBuildDateTS() int64
-	GetBuildDate() time.Time
+	defaultLogger *zap.Logger
+	cores         []zapcore.Core
 
-	GetMinimalLogLevel() string
-	GetSkipBuildInfo() bool
-	IsStacktraceEnabled() bool
+	defaultFields []zap.Field
 }
 
-type zapLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *zap.Logger
-	NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger
+func (s *Service) NewLoggerEntry(named string, fields ...any) *zap.Logger {
+	return s.newLoggerEntry(named, fields...)
 }
 
-type stdLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *log.Logger
+func (s *Service) newLoggerEntry(named string, fields ...any) *zap.Logger {
+	l := zap.New(zapcore.NewTee(s.cores...))
+
+	return l.Named(named).With(MakeZapFields(fields...)...)
 }
 
-type slogLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *slog.Logger
+func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger {
+	l := zap.New(zapcore.NewTee(s.cores...))
+
+	l = l.Named(named).With(append(s.defaultFields[:], fields...)...)
+
+	return l
+}
+
+func NewService(cfg configManager, defaultFields ...any) (*Service, error) {
+	cores := make([]zapcore.Core, 1)
+
+	logsLevel := new(zapcore.Level)
+	err := logsLevel.Set(cfg.GetMinimalLogLevel())
+	if err != nil {
+		return nil, err
+	}
+
+	lCfg := zap.NewProductionConfig()
+	lCfg.Level = zap.NewAtomicLevelAt(*logsLevel)
+	lCfg.DisableStacktrace = !cfg.IsStacktraceEnabled() // We use errs.ZapStack to get stacktrace
+	lCfg.OutputPaths = []string{"stdout"}
+	if cfg.IsDebug() {
+		lCfg.Level.SetLevel(zap.DebugLevel)
+	}
+
+	defaultLogger, err := lCfg.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	cores[0] = defaultLogger.Core()
+
+	zap.ReplaceGlobals(defaultLogger)
+
+	return &Service{
+		cfg:           cfg,
+		defaultLogger: defaultLogger,
+		cores:         cores,
+		defaultFields: makeZapFields(defaultFields...),
+	}, nil
 }

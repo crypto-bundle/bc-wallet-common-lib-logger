@@ -30,12 +30,10 @@
  *
  */
 
-package logger
+package slog
 
 import (
 	"go.uber.org/zap"
-	"log"
-	"log/slog"
 	"time"
 )
 
@@ -66,12 +64,4 @@ type configManager interface {
 type zapLogEntryService interface {
 	NewLoggerEntry(named string, fields ...any) *zap.Logger
 	NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger
-}
-
-type stdLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *log.Logger
-}
-
-type slogLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *slog.Logger
 }

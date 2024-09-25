@@ -30,48 +30,101 @@
  *
  */
 
-package logger
+package slog
 
 import (
-	"go.uber.org/zap"
-	"log"
+	"context"
 	"log/slog"
-	"time"
+	"runtime"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-type configManager interface {
-	GetHostName() string
-	GetEnvironmentName() string
-	IsProd() bool
-	IsStage() bool
-	IsTest() bool
-	IsDev() bool
-	IsDebug() bool
-	IsLocal() bool
-	GetStageName() string
+type option struct {
+	// log level (default: debug)
+	Level slog.Leveler
 
-	GetApplicationPID() int
-	GetReleaseTag() string
-	GetCommitID() string
-	GetShortCommitID() string
-	GetBuildNumber() uint64
-	GetBuildDateTS() int64
-	GetBuildDate() time.Time
+	// optional: zap logger (default: zap.L())
 
-	GetMinimalLogLevel() string
-	GetSkipBuildInfo() bool
-	IsStacktraceEnabled() bool
+	// optional: see slog.HandlerOptions
+	AddSource   bool
+	ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
 }
 
-type zapLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *zap.Logger
-	NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger
+func newZapHandler(attrs []slog.Attr, zapLogger *zap.Logger) slog.Handler {
+	if zapLogger == nil {
+		// should be selected lazily ?
+		zapLogger = zap.L()
+	}
+
+	return &zapHandler{
+		Logger: zapLogger,
+		attrs:  attrs,
+		groups: []string{},
+	}
 }
 
-type stdLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *log.Logger
+var _ slog.Handler = (*zapHandler)(nil)
+
+type zapHandler struct {
+	Logger *zap.Logger
+	option option
+	attrs  []slog.Attr
+	groups []string
 }
 
-type slogLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *slog.Logger
+func (h *zapHandler) Enabled(_ context.Context, level slog.Level) bool {
+	return level >= h.option.Level.Level()
+}
+
+func (h *zapHandler) Handle(_ context.Context, record slog.Record) error {
+	level := extractLoggerLevel(record.Level)
+
+	fields := extractFields(record)
+
+	checked := h.Logger.Check(level, record.Message)
+
+	switch true {
+	case checked == nil:
+		fallthrough
+	default:
+		h.Logger.Log(level, record.Message, fields...)
+
+	case checked != nil && h.option.AddSource:
+		frame, _ := runtime.CallersFrames([]uintptr{record.PC}).Next()
+		checked.Caller = zapcore.NewEntryCaller(0, frame.File, frame.Line, true)
+		checked.Stack = "" //@TODO
+
+		checked.Write(fields...)
+
+	case checked != nil && !h.option.AddSource:
+		checked.Caller = zapcore.EntryCaller{}
+		checked.Stack = ""
+
+		checked.Write(fields...)
+	}
+
+	return nil
+}
+
+func (h *zapHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &zapHandler{
+		option: h.option,
+		attrs:  append(h.attrs, attrs...),
+		groups: h.groups,
+	}
+}
+
+func (h *zapHandler) WithGroup(name string) slog.Handler {
+	// https://cs.opensource.google/go/x/exp/+/46b07846:slog/handler.go;l=247
+	if name == "" {
+		return h
+	}
+
+	return &zapHandler{
+		option: h.option,
+		attrs:  h.attrs,
+		groups: append(h.groups, name),
+	}
 }

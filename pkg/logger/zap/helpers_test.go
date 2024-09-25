@@ -30,48 +30,72 @@
  *
  */
 
-package logger
+package zap
 
-import (
-	"go.uber.org/zap"
-	"log"
-	"log/slog"
-	"time"
-)
+import "testing"
 
-type configManager interface {
-	GetHostName() string
-	GetEnvironmentName() string
-	IsProd() bool
-	IsStage() bool
-	IsTest() bool
-	IsDev() bool
-	IsDebug() bool
-	IsLocal() bool
-	GetStageName() string
+func TestMakeZapFields(t *testing.T) {
+	t.Run(" event filed count first case", func(t *testing.T) {
+		testData := []any{
+			"test_field_1", "test_value_1",
+			"test_field_2", "test_value_2",
+			"test_field_3", "test_value_3",
+		}
 
-	GetApplicationPID() int
-	GetReleaseTag() string
-	GetCommitID() string
-	GetShortCommitID() string
-	GetBuildNumber() uint64
-	GetBuildDateTS() int64
-	GetBuildDate() time.Time
+		result := MakeZapFields(testData...)
 
-	GetMinimalLogLevel() string
-	GetSkipBuildInfo() bool
-	IsStacktraceEnabled() bool
+		t.Log(len(result))
+	})
+
+	t.Run(" event filed count second case", func(t *testing.T) {
+		testData := []any{
+			"test_field_1", "test_value_1",
+			"test_field_2", "test_value_2",
+			"test_field_3",
+		}
+
+		result := MakeZapFields(testData...)
+
+		t.Log(len(result))
+	})
 }
 
-type zapLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *zap.Logger
-	NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger
-}
+func TestMakeFieldsForNonEven(t *testing.T) {
+	t.Run("non event filed count first case", func(t *testing.T) {
+		testData := []any{
+			"test_field_1", "test_value_1",
+			"test_field_2", "test_value_2",
+			"test_field_3",
+		}
 
-type stdLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *log.Logger
-}
+		result := MakeZapFields(testData...)
 
-type slogLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *slog.Logger
+		t.Log(len(result))
+	})
+
+	t.Run("non event filed count second case", func(t *testing.T) {
+		testData := []any{
+			"test_field_1", "test_value_1",
+			"test_field_2", "test_value_2",
+		}
+
+		result := MakeZapFields(testData...)
+
+		t.Log(len(result))
+	})
+
+	t.Run("non event filed count second case", func(t *testing.T) {
+		testData := []any{
+			"test_field_1", "test_value_1",
+			"test_field_2", "test_value_2",
+			"test_field_3", "test_value_3",
+			"test_field_4", "test_value_4",
+			"test_field_5", "test_value_5",
+		}
+
+		result := MakeZapFields(testData...)
+
+		t.Log(len(result))
+	})
+
 }

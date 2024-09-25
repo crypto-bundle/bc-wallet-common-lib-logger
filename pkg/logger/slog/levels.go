@@ -30,48 +30,29 @@
  *
  */
 
-package logger
+package slog
 
 import (
 	"go.uber.org/zap"
-	"log"
+	"go.uber.org/zap/zapcore"
 	"log/slog"
-	"time"
 )
 
-type configManager interface {
-	GetHostName() string
-	GetEnvironmentName() string
-	IsProd() bool
-	IsStage() bool
-	IsTest() bool
-	IsDev() bool
-	IsDebug() bool
-	IsLocal() bool
-	GetStageName() string
+func extractLoggerLevel(lvl slog.Level) zapcore.Level {
+	switch lvl {
+	case slog.LevelDebug:
+		return zap.DebugLevel
 
-	GetApplicationPID() int
-	GetReleaseTag() string
-	GetCommitID() string
-	GetShortCommitID() string
-	GetBuildNumber() uint64
-	GetBuildDateTS() int64
-	GetBuildDate() time.Time
+	case slog.LevelInfo:
+		return zap.InfoLevel
 
-	GetMinimalLogLevel() string
-	GetSkipBuildInfo() bool
-	IsStacktraceEnabled() bool
-}
+	case slog.LevelWarn:
+		return zap.WarnLevel
 
-type zapLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *zap.Logger
-	NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger
-}
+	case slog.LevelError:
+		return zap.ErrorLevel
 
-type stdLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *log.Logger
-}
-
-type slogLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *slog.Logger
+	default:
+		return zap.InfoLevel
+	}
 }
