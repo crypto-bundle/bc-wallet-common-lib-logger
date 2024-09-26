@@ -33,6 +33,7 @@
 package slog
 
 import (
+	"errors"
 	"log/slog"
 	"testing"
 	"time"
@@ -149,6 +150,43 @@ func TestExtractFields(t *testing.T) {
 	for _, tCase := range testCases {
 		r := slog.NewRecord(time.Now(), tCase.logLevel, tCase.logMessage, 0)
 		r.AddAttrs(tCase.attributes...)
+
+		zapFields := extractFields(r)
+		zapFieldsCount := uint(len(zapFields))
+
+		if zapFieldsCount != tCase.expectedAttrCount {
+			t.Errorf("zap fields count not equal with expected, current: %d, expected: %d",
+				zapFieldsCount, tCase.expectedAttrCount)
+		}
+	}
+}
+
+func TestExtractFieldsWithErrors(t *testing.T) {
+	type testCase struct {
+		logLevel          slog.Level
+		logMessage        string
+		attributes        []any
+		expectedAttrCount uint
+	}
+
+	var testCases = []testCase{
+		{
+			logLevel:   slog.LevelError,
+			logMessage: "some error",
+			attributes: []any{
+				slog.String("big_error_tag", "big_error_value"),
+				slog.Group("big_group_error_tag",
+					slog.Uint64("big_group_uint_error_tag", 100501),
+				),
+				errors.New("some new errors"),
+			},
+			expectedAttrCount: 3,
+		},
+	}
+
+	for _, tCase := range testCases {
+		r := slog.NewRecord(time.Now(), tCase.logLevel, tCase.logMessage, 0)
+		r.Add(tCase.attributes...)
 
 		zapFields := extractFields(r)
 		zapFieldsCount := uint(len(zapFields))

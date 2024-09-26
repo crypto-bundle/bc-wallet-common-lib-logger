@@ -75,6 +75,16 @@ func getFieldMapperFunc(kind slog.Kind) func(attr slog.Attr) zap.Field {
 			return zap.Float64(attr.Key, attr.Value.Float64())
 		}
 
+	case slog.KindAny:
+		return func(attr slog.Attr) zap.Field {
+			switch t := attr.Value.Any().(type) {
+			case error:
+				return zap.Error(t)
+			default:
+				return zap.Any(attr.Key, attr.Value)
+			}
+		}
+
 	default:
 		return nil
 	}

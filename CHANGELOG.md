@@ -1,8 +1,9 @@
 # Change Log
 
-## [v0.0.8] - 26.09.2024
+## [v0.0.8, v0.0.9] - 26.09.2024
 ### Added
 * Added golangci linter settings
+* Added support error value type to slog.Handler implementation for zap.Logger
 ### Changed
 * Changed linter rules
 * Cleaned up code by linter rules
