@@ -4,6 +4,7 @@
 ### Added
 * Added golangci linter settings
 ### Changed
+* Changed linter rules
 * Cleaned up code by linter rules
 * Removed support of options flow from zap.Logger implementation of slog.Handler
 
