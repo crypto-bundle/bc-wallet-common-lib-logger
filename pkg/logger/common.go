@@ -64,17 +64,12 @@ type configManager interface {
 	IsStacktraceEnabled() bool
 }
 
-type zapLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *zap.Logger
-	NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger
-}
-
-type stdLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *log.Logger
-}
-
 type slogLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *slog.Logger
+	NewLoggerEntry(fields ...any) *slog.Logger
+	NewLoggerEntryWithFields(fields ...slog.Attr) *slog.Logger
+	NewNamedLoggerEntry(name string,
+		fields ...any,
+	) *slog.Logger
 }
 
 type errorFormatterService interface {
@@ -82,4 +77,28 @@ type errorFormatterService interface {
 	Errorf(err error, format string, args ...interface{}) error
 	NewError(details ...string) error
 	NewErrorf(format string, args ...interface{}) error
+}
+
+type service interface {
+	NewStdLoggerEntry(fields ...any) *log.Logger
+	NewStdNamedLoggerEntry(named string, fields ...any) *log.Logger
+	NewSlogLoggerEntry(fields ...any) *slog.Logger
+	NewSlogLoggerEntryWithFields(fields ...slog.Attr) *slog.Logger
+	NewSlogNamedLoggerEntry(named string, fields ...any) *slog.Logger
+	NewZapLoggerEntry(fields ...any) *zap.Logger
+	NewZapNamedLoggerEntry(named string, fields ...any) *zap.Logger
+	NewZapNamedLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger
+}
+
+type zapLogEntryService interface {
+	NewLoggerEntry(fields ...any) *zap.Logger
+	NewNamedLoggerEntry(named string, fields ...any) *zap.Logger
+
+	NewLoggerEntryWithFields(fields ...zap.Field) *zap.Logger
+	NewNamedLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger
+}
+
+type stdLogEntryService interface {
+	NewLoggerEntry(fields ...any) *log.Logger
+	NewNamedLoggerEntry(name string, fields ...any) *log.Logger
 }

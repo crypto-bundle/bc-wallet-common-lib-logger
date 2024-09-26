@@ -43,6 +43,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var _ service = (*Service)(nil)
+
 type Service struct {
 	cfg configManager
 
@@ -51,16 +53,36 @@ type Service struct {
 	slogLogEntryBuilderSvc slogLogEntryService
 }
 
-func (s *Service) NewStdLoggerEntry(named string, fields ...any) *log.Logger {
-	return s.stdLogEntryBuilderSvc.NewLoggerEntry(named, fields...)
+func (s *Service) NewStdLoggerEntry(fields ...any) *log.Logger {
+	return s.stdLogEntryBuilderSvc.NewLoggerEntry(fields...)
 }
 
-func (s *Service) NewSlogLoggerEntry(named string, fields ...any) *slog.Logger {
-	return s.slogLogEntryBuilderSvc.NewLoggerEntry(named, fields...)
+func (s *Service) NewStdNamedLoggerEntry(named string, fields ...any) *log.Logger {
+	return s.stdLogEntryBuilderSvc.NewNamedLoggerEntry(named, fields...)
 }
 
-func (s *Service) NewZapLoggerEntry(named string, fields ...any) *zap.Logger {
-	return s.zapLogEntryBuilderSvc.NewLoggerEntry(named, fields...)
+func (s *Service) NewSlogLoggerEntry(fields ...any) *slog.Logger {
+	return s.slogLogEntryBuilderSvc.NewLoggerEntry(fields...)
+}
+
+func (s *Service) NewSlogLoggerEntryWithFields(fields ...slog.Attr) *slog.Logger {
+	return s.slogLogEntryBuilderSvc.NewLoggerEntryWithFields(fields...)
+}
+
+func (s *Service) NewSlogNamedLoggerEntry(named string, fields ...any) *slog.Logger {
+	return s.slogLogEntryBuilderSvc.NewNamedLoggerEntry(named, fields...)
+}
+
+func (s *Service) NewZapLoggerEntry(fields ...any) *zap.Logger {
+	return s.zapLogEntryBuilderSvc.NewLoggerEntry(fields...)
+}
+
+func (s *Service) NewZapNamedLoggerEntry(named string, fields ...any) *zap.Logger {
+	return s.zapLogEntryBuilderSvc.NewNamedLoggerEntry(named, fields...)
+}
+
+func (s *Service) NewZapNamedLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger {
+	return s.zapLogEntryBuilderSvc.NewNamedLoggerEntryWithFields(named, fields...)
 }
 
 func NewService(cfg configManager, errFmtSvc errorFormatterService) (*Service, error) {

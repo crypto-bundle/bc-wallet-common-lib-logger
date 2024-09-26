@@ -37,6 +37,9 @@ import (
 )
 
 type zapLogEntryService interface {
-	NewLoggerEntry(named string, fields ...any) *zap.Logger
-	NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger
+	NewLoggerEntry(fields ...any) *zap.Logger
+	NewNamedLoggerEntry(named string, fields ...any) *zap.Logger
+
+	NewLoggerEntryWithFields(fields ...zap.Field) *zap.Logger
+	NewNamedLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger
 }

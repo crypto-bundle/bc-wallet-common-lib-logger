@@ -42,11 +42,21 @@ type slogFabric struct {
 	e errorFormatterService
 }
 
-func (s *slogFabric) NewLoggerEntry(name string,
+func (s *slogFabric) NewLoggerEntry(fields ...any) *slog.Logger {
+	return slog.New(newZapHandler(nil, s.e,
+		s.zapLogMakerSvc.NewLoggerEntry(fields...)))
+}
+
+func (s *slogFabric) NewLoggerEntryWithFields(fields ...slog.Attr) *slog.Logger {
+	return slog.New(newZapHandler(nil, s.e,
+		s.zapLogMakerSvc.NewLoggerEntryWithFields(mapFields(fields)...)))
+}
+
+func (s *slogFabric) NewNamedLoggerEntry(name string,
 	fields ...any,
 ) *slog.Logger {
 	return slog.New(newZapHandler(nil, s.e,
-		s.zapLogMakerSvc.NewLoggerEntry(name, fields...)))
+		s.zapLogMakerSvc.NewNamedLoggerEntry(name, fields...)))
 }
 
 func NewSLogMaker(zapLogMakerSvc zapLogEntryService,

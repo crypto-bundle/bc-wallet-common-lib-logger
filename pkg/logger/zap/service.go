@@ -47,7 +47,14 @@ type Service struct {
 	defaultFields []zap.Field
 }
 
-func (s *Service) NewLoggerEntry(named string, fields ...any) *zap.Logger {
+func (s *Service) NewLoggerEntry(fields ...any) *zap.Logger {
+	l := zap.New(zapcore.NewTee(s.cores...))
+
+	return l.With(append(s.defaultFields[:0:0],
+		MakeZapFields(fields...)...)...)
+}
+
+func (s *Service) NewNamedLoggerEntry(named string, fields ...any) *zap.Logger {
 	return s.newLoggerEntry(named, fields...)
 }
 
@@ -58,7 +65,14 @@ func (s *Service) newLoggerEntry(named string, fields ...any) *zap.Logger {
 		MakeZapFields(fields...)...)...)
 }
 
-func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger {
+func (s *Service) NewLoggerEntryWithFields(fields ...zap.Field) *zap.Logger {
+	l := zap.New(zapcore.NewTee(s.cores...))
+
+	return l.With(append(s.defaultFields[:0:0],
+		fields...)...)
+}
+
+func (s *Service) NewNamedLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger {
 	l := zap.New(zapcore.NewTee(s.cores...))
 
 	return l.Named(named).With(append(s.defaultFields[:0:0],
