@@ -33,10 +33,11 @@
 package logger
 
 import (
-	"go.uber.org/zap"
 	"log"
 	"log/slog"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 type configManager interface {
@@ -74,4 +75,11 @@ type stdLogEntryService interface {
 
 type slogLogEntryService interface {
 	NewLoggerEntry(named string, fields ...any) *slog.Logger
+}
+
+type errorFormatterService interface {
+	ErrorOnly(err error, details ...string) error
+	Errorf(err error, format string, args ...interface{}) error
+	NewError(details ...string) error
+	NewErrorf(format string, args ...interface{}) error
 }

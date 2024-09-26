@@ -33,9 +33,10 @@
 package slog
 
 import (
+	"log/slog"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"log/slog"
 )
 
 func extractLoggerLevel(lvl slog.Level) zapcore.Level {

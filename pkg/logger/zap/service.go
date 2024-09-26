@@ -39,6 +39,7 @@ import (
 
 type Service struct {
 	cfg configManager
+	e   errorFormatterService
 
 	defaultLogger *zap.Logger
 	cores         []zapcore.Core
@@ -53,37 +54,41 @@ func (s *Service) NewLoggerEntry(named string, fields ...any) *zap.Logger {
 func (s *Service) newLoggerEntry(named string, fields ...any) *zap.Logger {
 	l := zap.New(zapcore.NewTee(s.cores...))
 
-	return l.Named(named).With(MakeZapFields(fields...)...)
+	return l.Named(named).With(append(s.defaultFields[:0:0],
+		MakeZapFields(fields...)...)...)
 }
 
 func (s *Service) NewLoggerEntryWithFields(named string, fields ...zap.Field) *zap.Logger {
 	l := zap.New(zapcore.NewTee(s.cores...))
 
-	l = l.Named(named).With(append(s.defaultFields[:], fields...)...)
-
-	return l
+	return l.Named(named).With(append(s.defaultFields[:0:0],
+		fields...)...)
 }
 
-func NewService(cfg configManager, defaultFields ...any) (*Service, error) {
+func NewService(cfg configManager,
+	errFormatterSvc errorFormatterService,
+	defaultFields ...any,
+) (*Service, error) {
 	cores := make([]zapcore.Core, 1)
-
 	logsLevel := new(zapcore.Level)
+
 	err := logsLevel.Set(cfg.GetMinimalLogLevel())
 	if err != nil {
-		return nil, err
+		return nil, errFormatterSvc.ErrorOnly(err)
 	}
 
 	lCfg := zap.NewProductionConfig()
 	lCfg.Level = zap.NewAtomicLevelAt(*logsLevel)
 	lCfg.DisableStacktrace = !cfg.IsStacktraceEnabled() // We use errs.ZapStack to get stacktrace
 	lCfg.OutputPaths = []string{"stdout"}
+
 	if cfg.IsDebug() {
 		lCfg.Level.SetLevel(zap.DebugLevel)
 	}
 
 	defaultLogger, err := lCfg.Build()
 	if err != nil {
-		return nil, err
+		return nil, errFormatterSvc.ErrorOnly(err)
 	}
 
 	cores[0] = defaultLogger.Core()
@@ -95,5 +100,6 @@ func NewService(cfg configManager, defaultFields ...any) (*Service, error) {
 		defaultLogger: defaultLogger,
 		cores:         cores,
 		defaultFields: makeZapFields(defaultFields...),
+		e:             errFormatterSvc,
 	}, nil
 }

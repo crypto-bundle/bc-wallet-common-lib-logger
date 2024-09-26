@@ -55,15 +55,16 @@ func makeZapFields(fields ...any) []zap.Field {
 func makeFieldsForEven(fieldsCount int,
 	fields ...any,
 ) []zap.Field {
-	zapFields := make([]zap.Field, fieldsCount/2)
+	//nolint:mnd //it's ok here - zap fields count equal to half of total fields
+	var zapFields = make([]zap.Field, fieldsCount/2)
 
-	for i, j := 0, 0; i != fieldsCount; i, j = i+2, j+1 {
-		fieldName, isString := fields[i].(string)
+	for fldIdx, zapFldIdx := 0, 0; fldIdx != fieldsCount; fldIdx, zapFldIdx = fldIdx+2, zapFldIdx+1 {
+		fieldName, isString := fields[fldIdx].(string)
 		if !isString {
 			fieldName = BadLoggerKeyName
 		}
 
-		zapFields[j] = zap.Any(fieldName, fields[i+1])
+		zapFields[zapFldIdx] = zap.Any(fieldName, fields[fldIdx+1])
 	}
 
 	return zapFields
@@ -72,24 +73,27 @@ func makeFieldsForEven(fieldsCount int,
 func makeFieldsForNonEven(fieldsCount int,
 	fields ...any,
 ) []zap.Field {
-	zapFields := make([]zap.Field, (fieldsCount/2)+1)
-	var j int
+	var (
+		sliceLengthCounter int
+		zapFields          = make([]zap.Field, (fieldsCount/2)+1)
+	)
 
-	for i := 0; i != fieldsCount; i = i + 2 {
-		if i+1 >= fieldsCount {
-			zapFields[j] = zap.Any(BadLoggerKeyName, fields[i])
-			j++
+	for index := 0; index != fieldsCount; index += 2 {
+		if index+1 >= fieldsCount {
+			zapFields[sliceLengthCounter] = zap.Any(BadLoggerKeyName, fields[index])
+			sliceLengthCounter++
+
 			break
 		}
 
-		fieldName, isString := fields[i].(string)
+		fieldName, isString := fields[index].(string)
 		if !isString {
 			fieldName = BadLoggerKeyName
 		}
 
-		zapFields[j] = zap.Any(fieldName, fields[i+1])
-		j++
+		zapFields[sliceLengthCounter] = zap.Any(fieldName, fields[index+1])
+		sliceLengthCounter++
 	}
 
-	return zapFields[:j]
+	return zapFields[:sliceLengthCounter]
 }

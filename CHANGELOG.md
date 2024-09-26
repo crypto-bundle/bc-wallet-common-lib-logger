@@ -1,5 +1,13 @@
 # Change Log
 
+## [v0.0.8] - 26.09.2024
+### Added
+* Added golangci linter settings
+### Changed
+* Changed linter rules
+* Cleaned up code by linter rules
+* Removed support of options flow from zap.Logger implementation of slog.Handler
+
 ## [v0.0.7] - 25.09.2024
 ### Added
 * Added slog Logger support

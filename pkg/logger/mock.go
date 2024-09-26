@@ -48,9 +48,11 @@ func (m *MockSrv) NewLoggerEntry(_ string) (*zap.Logger, error) {
 }
 
 func (m *MockSrv) NewLoggerEntryWithFields(named string, fields ...zap.Field) (*zap.Logger, error) {
-	return zaptest.NewLogger(m.t), nil
+	return zaptest.NewLogger(m.t).Named(named).With(fields...), nil
 }
 
 func NewLoggerServiceMock(t *testing.T) *MockSrv {
+	t.Helper()
+
 	return &MockSrv{t: t}
 }
