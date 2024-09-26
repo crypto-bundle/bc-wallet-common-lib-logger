@@ -38,6 +38,7 @@ import (
 	"go.uber.org/zap"
 )
 
+//nolint:cyclop //it's ok
 func getFieldMapperFunc(kind slog.Kind) func(attr slog.Attr) zap.Field {
 	switch kind {
 	case slog.KindBool:

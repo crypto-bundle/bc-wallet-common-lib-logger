@@ -42,8 +42,12 @@ type stdLogFabric struct {
 	zapLogMakerSvc zapLogEntryService
 }
 
-func (s *stdLogFabric) NewLoggerEntry(name string, fields ...any) *log.Logger {
-	return zap.NewStdLog(s.zapLogMakerSvc.NewLoggerEntry(name, fields...))
+func (s *stdLogFabric) NewLoggerEntry(fields ...any) *log.Logger {
+	return zap.NewStdLog(s.zapLogMakerSvc.NewLoggerEntry(fields...))
+}
+
+func (s *stdLogFabric) NewNamedLoggerEntry(name string, fields ...any) *log.Logger {
+	return zap.NewStdLog(s.zapLogMakerSvc.NewNamedLoggerEntry(name, fields...))
 }
 
 func NewStdLogMaker(zapLogMakerSvc zapLogEntryService) *stdLogFabric {

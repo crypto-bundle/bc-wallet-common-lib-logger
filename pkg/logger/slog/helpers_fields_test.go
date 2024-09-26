@@ -182,6 +182,21 @@ func TestExtractFieldsWithErrors(t *testing.T) {
 			},
 			expectedAttrCount: 3,
 		},
+		{
+			logLevel:   slog.LevelError,
+			logMessage: "some error",
+			attributes: []any{
+				errors.New("some new errors_1"),
+				errors.New("some new errors_2"),
+				errors.New("some new errors_3"),
+				slog.String("big_error_tag", "big_error_value"),
+				slog.Group("big_group_error_tag",
+					slog.Uint64("big_group_uint_error_tag", 100501),
+				),
+				errors.New("some new errors_4"),
+			},
+			expectedAttrCount: 6,
+		},
 	}
 
 	for _, tCase := range testCases {

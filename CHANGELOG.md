@@ -1,9 +1,10 @@
 # Change Log
 
-## [v0.0.8, v0.0.9] - 26.09.2024
+## [v0.0.8, v0.0.9, v0.0.10] - 26.09.2024
 ### Added
 * Added golangci linter settings
 * Added support error value type to slog.Handler implementation for zap.Logger
+* Added new root service-component for create logger entry with tuple-base fields(zap.Field, slog.Attr)
 ### Changed
 * Changed linter rules
 * Cleaned up code by linter rules
