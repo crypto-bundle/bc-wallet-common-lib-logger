@@ -104,6 +104,8 @@ linters-settings:
       - .WithMessagef(
       - .WithStack(
       # bc-wallet-common-lib-errors
+      - .ErrorNoWrap
+      - .ErrNoWrap
       - .Errorf(
       - .ErrorOnly(
       - .Error(

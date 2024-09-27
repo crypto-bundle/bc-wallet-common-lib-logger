@@ -1,5 +1,10 @@
 # Change Log
 
+## [v0.0.11] - 27.09.2024
+### Added
+* Support of new lib-errors method - ErrNoWrap
+* New settings for wrapcheck linter
+
 ## [v0.0.8, v0.0.9, v0.0.10] - 26.09.2024
 ### Added
 * Added golangci linter settings
